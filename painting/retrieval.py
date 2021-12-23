@@ -1,8 +1,11 @@
 import os
 import pickle
+from time import perf_counter
 
 import cv2 as cv
 import matplotlib.pyplot as plt
+import numpy
+from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
 from dataset import Dataset
@@ -15,19 +18,45 @@ class ImageRetrieval:
         self.feature = feature
 
     def search(self, query, n_results=5):
+        start_time = perf_counter()
+
         q = ImageDescriptor.describe(query, self.feature)  # query representation
 
         with open(os.path.join(FEATURES_FOLDER, f"{self.feature}.index"), 'rb') as index:
             NN = pickle.load(index)
             distances, indexes = NN.kneighbors([q], n_results)
 
-            return dict(zip(indexes[0], distances[0]))
+            elapsed = perf_counter() - start_time
+            return dict(zip(indexes[0], distances[0])), elapsed
+
+    def search_without_index(self, query, n_results=5):
+        start_time = perf_counter()
+
+        # query representation
+        q = ImageDescriptor.describe(query, self.feature)
+
+        # load the raw document representation
+        features = load_features(self.feature)
+
+        # compute distances between the query and the documents
+        distances = pairwise_distances([q], features)
+        distances = distances[0]
+
+        # rank indexes
+        ranked_indexes = numpy.argsort(distances)
+
+        ranked_indexes = ranked_indexes[:n_results]
+        distances = distances[ranked_indexes]
+
+        elapsed = perf_counter() - start_time
+        return dict(zip(ranked_indexes, distances)), elapsed
 
     def index(self, similarity):
         features = load_features(self.feature)
         NN = NearestNeighbors(metric=similarity).fit(features)
 
-        with open(os.path.join(FEATURES_FOLDER, f"{self.feature}.index"), "wb") as index:
+        filename = f"{self.feature}-{similarity}.index"
+        with open(os.path.join(FEATURES_FOLDER, filename), "wb") as index:
             pickle.dump(NN, index)
 
     def plot_similar_results(self, query, distances, n_results=5, save=False):
@@ -59,8 +88,14 @@ if __name__ == "__main__":
     image = ds.get_image_by_index(50)
 
     ir = ImageRetrieval("rgb_hist")
-    ir.index("euclidean")
+    ir.index("cosine")
 
-    dists = ir.search(image, 5)
+    dists, time = ir.search(image, 5)
+    print(dists)
+    print("time: ", time)
+
+    dists, time = ir.search_without_index(image, 5)
+    print(dists)
+    print("time: ", time)
 
     ir.plot_similar_results(image, dists, n_results=5, save=False)

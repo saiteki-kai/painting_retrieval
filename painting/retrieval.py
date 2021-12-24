@@ -9,37 +9,39 @@ from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
 from dataset import Dataset
-from descriptor import ImageDescriptor
-from utils import load_features, FEATURES_FOLDER, OUTPUT_FOLDER, TEST_FOLDER
+from descriptor import describe
+from painting.utils import TEST_FOLDER
+from utils import load_features, FEATURES_FOLDER, OUTPUT_FOLDER
 
 
 class ImageRetrieval:
     def __init__(self, feature):
         self.feature = feature
 
-    def search(self, query, n_results=5):
+    def search(self, query, similarity="euclidean", n_results=5):
         start_time = perf_counter()
 
-        q = ImageDescriptor.describe(query, self.feature)  # query representation
+        q = describe(query, self.feature)  # query representation
 
-        with open(os.path.join(FEATURES_FOLDER, f"{self.feature}.index"), 'rb') as index:
+        filename = f"{self.feature}-{similarity}.index"
+        with open(os.path.join(FEATURES_FOLDER, filename), 'rb') as index:
             NN = pickle.load(index)
             distances, indexes = NN.kneighbors([q], n_results)
 
             elapsed = perf_counter() - start_time
             return dict(zip(indexes[0], distances[0])), elapsed
 
-    def search_without_index(self, query, n_results=5):
+    def search_without_index(self, query, similarity="euclidean", n_results=5):
         start_time = perf_counter()
 
         # query representation
-        q = ImageDescriptor.describe(query, self.feature)
+        q = describe(query, self.feature)
 
         # load the raw document representation
         features = load_features(self.feature)
 
         # compute distances between the query and the documents
-        distances = pairwise_distances([q], features)
+        distances = pairwise_distances([q], features, metric=similarity)
         distances = distances[0]
 
         # rank indexes
@@ -77,25 +79,30 @@ class ImageRetrieval:
 
         if save:
             fig.savefig(
-                os.path.join(OUTPUT_FOLDER, f"out_{distances.keys()[0]}_{self.feature}.png"))
+                os.path.join(OUTPUT_FOLDER, f"out_{list(distances.keys())[0]}_{self.feature}.png"))
         else:
             plt.show()
 
 
 if __name__ == "__main__":
-    ds = Dataset(TEST_FOLDER)
+    ds = Dataset(TEST_FOLDER, (512, 512))
 
-    image = ds.get_image_by_index(50)
+    image = ds.get_image_by_index(410)
+    # image = ds.get_image_by_filename("49823.jpg")
+    # image = ds.get_image_by_filename("2993.jpg")
 
-    ir = ImageRetrieval("rgb_hist")
-    ir.index("cosine")
+    metric = "euclidean"
+    results = 5
 
-    dists, time = ir.search(image, 5)
+    ir = ImageRetrieval("lbp")
+    ir.index(metric)
+
+    dists, time = ir.search(image, metric, results)
     print(dists)
     print("time: ", time)
 
-    dists, time = ir.search_without_index(image, 5)
+    dists, time = ir.search_without_index(image, metric, results)
     print(dists)
     print("time: ", time)
 
-    ir.plot_similar_results(image, dists, n_results=5, save=False)
+    ir.plot_similar_results(image, dists, n_results=results, save=False)

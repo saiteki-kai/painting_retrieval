@@ -1,23 +1,45 @@
 import os
 
-import cv2 as cv
 import numpy as np
 
-from painting.descriptor import ImageDescriptor
+from painting.dataset import Dataset
+from painting.descriptor import compute_rgb_hist, compute_hsv_hist, compute_lbp
 from painting.utils import TRAIN_FOLDER, FEATURES_FOLDER
 
+
+def compute_descriptor(dataset: Dataset, feature_size, descriptor_fn):
+    """
+    :param dataset: Dataset instance
+    :param feature_size: features vector length
+    :param descriptor_fn: function that computes the feature for each image
+    :return features matrix
+    """
+
+    if not isinstance(feature_size, int):
+        raise ValueError("'features_size' must be an integer number")
+
+    if not callable(descriptor_fn):
+        raise ValueError("'descriptor_fn' must be callable")
+
+    N = dataset.length()
+    features = np.zeros((N, feature_size))
+    for idx, img in enumerate(dataset.images()):
+        f = descriptor_fn(img)
+        features[idx, :] = f
+        # print(f"{img.shape} -> {f.shape}")
+        if idx % 1000 == 0:
+            print(idx)
+    return features
+
+
 if __name__ == "__main__":
-    image_list = os.listdir(TRAIN_FOLDER)
-    image_list = list(map(lambda fn: os.path.join(TRAIN_FOLDER, fn), image_list))
+    ds = Dataset(TRAIN_FOLDER, (512, 512))
 
-    N_images = len(image_list)
+    #features = compute_descriptor(ds, 692, compute_hsv_hist)
+    #np.save(os.path.join(FEATURES_FOLDER, "hsv_hist"), features)
 
-    features = np.zeros((N_images, 180 + 256 + 256))
-    for idx, filename in enumerate(image_list):
-        img = cv.imread(filename)
-        h = ImageDescriptor.compute_hsv_hist(img)
-        # print(f"{img.shape} -> {h.shape}")
-        features[idx, :] = h
+    # features = compute_descriptor(ds, 768, compute_rgb_hist)
+    # np.save(os.path.join(FEATURES_FOLDER, "rgb_hist"), features)
 
-    print(len(features))
-    np.save(os.path.join(FEATURES_FOLDER, "hsv_hist"), features)
+    features = compute_descriptor(ds, 18, compute_lbp)
+    np.save(os.path.join(FEATURES_FOLDER, "lbp"), features)

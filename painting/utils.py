@@ -9,7 +9,7 @@ OUTPUT_FOLDER = os.path.join(os.getcwd(), "out")
 
 
 def load_features(feature):
-    if feature not in ["hog", "hsv_hist", "rgb_hist", "bow_sift"]:
+    if feature not in ["hog", "hsv_hist", "lbp", "rgb_hist", "bow_sift"]:
         raise ValueError(f"unrecognized feature: '{feature}'")
 
     filepath = os.path.join(FEATURES_FOLDER, f"{feature}.npy")

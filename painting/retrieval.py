@@ -29,7 +29,7 @@ class ImageRetrieval:
             distances, indexes = NN.kneighbors([q], n_results)
 
             elapsed = perf_counter() - start_time
-            return dict(zip(indexes[0], distances[0])), elapsed
+            return indexes[0], distances[0], elapsed
 
     def search_without_index(self, query, similarity="euclidean", n_results=5):
         start_time = perf_counter()
@@ -51,7 +51,7 @@ class ImageRetrieval:
         distances = distances[ranked_indexes]
 
         elapsed = perf_counter() - start_time
-        return dict(zip(ranked_indexes, distances)), elapsed
+        return ranked_indexes, distances, elapsed
 
     def index(self, similarity):
         features = load_features(self.feature)
@@ -61,7 +61,7 @@ class ImageRetrieval:
         with open(os.path.join(FEATURES_FOLDER, filename), "wb") as index:
             pickle.dump(NN, index)
 
-    def plot_similar_results(self, query, distances, n_results=5, save=False):
+    def plot_similar_results(self, query, indexes, distances=None, n_results=5, save=False):
         fig, axes = plt.subplots(2, n_results)
 
         # hide axis
@@ -73,13 +73,15 @@ class ImageRetrieval:
         axes[0, 2].set_title("query")
 
         # ranked similar image
-        for n, (idx, dist) in enumerate(distances.items()):
+        for n, idx in enumerate(indexes):
             axes[1, n].imshow(cv.cvtColor(ds.get_image_by_index(idx), cv.COLOR_BGR2RGB))
-            axes[1, n].set_title(f"{dist:.2f}")
+
+            if distances is not None:
+                axes[1, n].set_title(f"{distances[n]:.2f}")
 
         if save:
             fig.savefig(
-                os.path.join(OUTPUT_FOLDER, f"out_{list(distances.keys())[0]}_{self.feature}.png"))
+                os.path.join(OUTPUT_FOLDER, f"out_{self.feature}.png"))
         else:
             plt.show()
 
@@ -94,15 +96,17 @@ if __name__ == "__main__":
     metric = "euclidean"
     results = 5
 
-    ir = ImageRetrieval("lbp")
+    ir = ImageRetrieval("rgb_hist")
     ir.index(metric)
 
-    dists, time = ir.search(image, metric, results)
-    print(dists)
+    ids, dists, time = ir.search(image, metric, results)
+    print(dict(zip(ids, dists)))
     print("time: ", time)
 
-    dists, time = ir.search_without_index(image, metric, results)
-    print(dists)
+    ids, dists, time = ir.search_without_index(image, metric, results)
+    print(dict(zip(ids, dists)))
     print("time: ", time)
 
-    ir.plot_similar_results(image, dists, n_results=results, save=False)
+    ir.plot_similar_results(image, ids, distances=dists, n_results=results, save=False)
+
+    # histogram: minkowski distance [p=1 (city-block), p=2 (euclidean)]

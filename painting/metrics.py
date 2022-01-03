@@ -62,9 +62,10 @@ def recall_at_k(relevant, retrieved, k=None):
     return len(relevant & retrieved) / float(len(relevant))
 
 
+# FIX: wrong implementation. the average must be computed only using relevant documents
 def average_precision(relevant, retrieved, k):
     ap = 0
     for i in range(1, k + 1):
         pi = precision_at_k(relevant, retrieved, i)
         ap = ap + pi
-    return ap / k
+    return ap / min(k, len(relevant))

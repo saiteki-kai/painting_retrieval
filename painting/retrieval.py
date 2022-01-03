@@ -8,8 +8,9 @@ import numpy
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
-from dataset import Dataset
-from descriptor import describe
+import painting.metrics
+from painting.dataset import Dataset
+from painting.descriptor import describe
 from painting.utils import TEST_FOLDER
 from utils import load_features, FEATURES_FOLDER, OUTPUT_FOLDER
 
@@ -84,6 +85,28 @@ class ImageRetrieval:
                 os.path.join(OUTPUT_FOLDER, f"out_{self.feature}.png"))
         else:
             plt.show()
+
+    def evaluate_query(self, query, true_relevant_ids, metrics, n_results=5):
+        ids, _, _ = self.search(query, "minkowski", n_results)
+
+        results = {}
+        for m in metrics:
+            try:
+                fn = getattr(painting.metrics, m)
+                results[m] = fn(true_relevant_ids, ids, k=n_results)
+            except Exception:
+                raise ValueError(f"Unknown metric function: {m}")
+
+        return results
+
+    def evaluate_queries(self, queries, true_relevant_ids, metrics, n_results=5):
+        results = []
+
+        for i, q in enumerate(queries):
+            res = self.evaluate_query(q, true_relevant_ids[i], metrics, n_results)
+            results.append(res)
+
+        return results
 
 
 if __name__ == "__main__":

@@ -1,10 +1,15 @@
 import cv2 as cv
 import numpy as np
 from skimage.feature import local_binary_pattern
-
+from ccv import get_ccv
 
 def describe(img, feature):
-    if feature not in ["hog", "hsv_hist", "lbp", "rgb_hist", "bow_sift"]:
+    list_of_features = [
+        "hog", "hsv_hist", "lbp", 
+        "rgb_hist", "bow_sift",
+        "ccv", "dct"]
+
+    if feature not in list_of_features:
         raise ValueError(f"unrecognized feature: '{feature}'")
 
     if feature == "rgb_hist":
@@ -13,6 +18,13 @@ def describe(img, feature):
         return compute_hsv_hist(img)
     elif feature == "lbp":
         return compute_lbp(img)
+    elif feature == "hog":
+        return compute_hog(img)
+    elif feature == "ccv":
+        return compute_ccv(img)
+    elif feature == "dct":
+        return compute_dct(img)
+
 
 
 def compute_rgb_hist(img):
@@ -71,3 +83,24 @@ def compute_lbp(img):
     #         out.append(hist.ravel())
     #
     # return np.array(out).ravel()
+
+def compute_hog(img):
+    hog = cv.HOGDescriptor()
+    img = hog.compute(img)
+
+    return img
+
+def compute_ccv(img, n=2, tau=0.01):
+    return get_ccv(img, n=n, tau=tau) 
+
+def compute_dct(img):
+    num_channels = img.shape[-1]
+
+    if num_channels == 3:
+        img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    
+    img = np.float32(img)/255.0
+    dct = cv.dct(img)
+    dct = np.uint8(dct * 255)
+
+    return dct

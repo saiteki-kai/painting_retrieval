@@ -149,6 +149,5 @@ cython_debug/
 
 data/
 out/
-dataset/
 painting/test.py
 

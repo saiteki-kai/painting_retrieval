@@ -8,21 +8,23 @@ import numpy
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
-import painting.metrics
-from painting.dataset import Dataset
-from painting.descriptor import describe
-from painting.utils import TEST_FOLDER
+import metrics as my_metrics
+from dataset import Dataset
+from descriptor import compute_feature
+from utils import TRAIN_FOLDER, TEST_FOLDER, RETRIEVAL_FOLDER, FEATURES_FOLDER 
 from utils import load_features, FEATURES_FOLDER, OUTPUT_FOLDER
 
 
 class ImageRetrieval:
-    def __init__(self, feature):
+    def __init__(self, feature, list_files, dataset):
         self.feature = feature
+        self.list_files = list_files
+        self.dataset = dataset
 
     def search(self, query, similarity="euclidean", n_results=5):
         start_time = perf_counter()
 
-        q = describe(query, self.feature)  # query representation
+        q = compute_feature(query, self.feature)  # query representation
 
         filename = f"{self.feature}-{similarity}.index"
         with open(os.path.join(FEATURES_FOLDER, filename), 'rb') as index:
@@ -36,10 +38,10 @@ class ImageRetrieval:
         start_time = perf_counter()
 
         # query representation
-        q = describe(query, self.feature)
+        q = compute_feature(query, self.feature)
 
         # load the raw document representation
-        features = load_features(self.feature)
+        features = load_features(self.feature, self.list_files)
 
         # compute distances between the query and the documents
         distances = pairwise_distances([q], features, metric=similarity)
@@ -55,7 +57,7 @@ class ImageRetrieval:
         return ranked_indexes, distances, elapsed
 
     def index(self, similarity):
-        features = load_features(self.feature)
+        features = load_features(self.feature, self.list_files)
         NN = NearestNeighbors(metric=similarity).fit(features)
 
         filename = f"{self.feature}-{similarity}.index"
@@ -75,10 +77,12 @@ class ImageRetrieval:
 
         # ranked similar image
         for n, idx in enumerate(indexes):
-            axes[1, n].imshow(cv.cvtColor(ds.get_image_by_index(idx), cv.COLOR_BGR2RGB))
+            axes[1, n].imshow(cv.cvtColor(self.dataset.get_image_by_index(idx), cv.COLOR_BGR2RGB))
 
             if distances is not None:
-                axes[1, n].set_title(f"{distances[n]:.2f}")
+                name_file = self.dataset._image_list[idx][self.dataset._image_list[idx].rfind('/')+1:]
+                #ds._image_list[i][ds._image_list[i].rfind('/')+1:]
+                axes[1, n].set_title(f"dist : {distances[n]:.2f}\n\"{name_file}\"")
 
         if save:
             fig.savefig(
@@ -92,7 +96,7 @@ class ImageRetrieval:
         results = {}
         for m in metrics:
             try:
-                fn = getattr(painting.metrics, m)
+                fn = getattr(my_metrics, m)
                 results[m] = fn(true_relevant_ids, ids, k=n_results)
             except Exception:
                 raise ValueError(f"Unknown metric function: {m}")
@@ -110,25 +114,32 @@ class ImageRetrieval:
 
 
 if __name__ == "__main__":
-    ds = Dataset(TEST_FOLDER, (512, 512))
-
-    image = ds.get_image_by_index(410)
-    # image = ds.get_image_by_filename("49823.jpg")
-    # image = ds.get_image_by_filename("2993.jpg")
+    ds = Dataset(RETRIEVAL_FOLDER)
+    
+    #image = ds.get_image_by_filename("34463.jpg")
+    image = ds.get_image_by_index(139)
 
     metric = "euclidean"
     results = 5
+    list_files = []
+    #remove the path, we just want the file names
+    for i in range(len(ds._image_list)):
+        list_files.append( ds._image_list[i][ds._image_list[i].rfind('/')+1:] )
 
-    ir = ImageRetrieval("rgb_hist")
+
+    ir = ImageRetrieval("rgb_hist", list_files, ds)
     ir.index(metric)
 
     ids, dists, time = ir.search(image, metric, results)
     print(dict(zip(ids, dists)))
-    print("time: ", time)
+    print("Search Time with index: ", time)
 
     ids, dists, time = ir.search_without_index(image, metric, results)
     print(dict(zip(ids, dists)))
-    print("time: ", time)
+    print("Search Time without_index: ", time)
+
+    #print(dists)
+    #print(ids)
 
     ir.plot_similar_results(image, ids, distances=dists, n_results=results, save=False)
 

@@ -1,10 +1,10 @@
-from painting.dataset import Dataset
-from painting.metrics import recall_at_k, precision_at_k
-from painting.retrieval import ImageRetrieval
-from painting.utils import TEST_FOLDER
+from dataset import Dataset
+from metrics import recall_at_k, precision_at_k
+from retrieval import ImageRetrieval
+from utils import TRAIN_FOLDER, TEST_FOLDER, RETRIEVAL_FOLDER, FEATURES_FOLDER 
 
 if __name__ == "__main__":
-    ds = Dataset(TEST_FOLDER, (512, 512))
+    ds = Dataset(RETRIEVAL_FOLDER, (512, 512))
 
     retrieval = ImageRetrieval("rgb_hist")
     # retrieval.index("minkowski")

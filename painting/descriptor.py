@@ -3,7 +3,7 @@ import numpy as np
 from skimage.feature import local_binary_pattern
 from ccv import get_ccv
 
-def describe(img, feature):
+def compute_feature(img, feature):
     list_of_features = [
         "hog", "hsv_hist", "lbp", 
         "rgb_hist", "bow_sift",

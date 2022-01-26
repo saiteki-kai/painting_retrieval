@@ -2,44 +2,50 @@ import os
 
 import numpy as np
 
-from painting.dataset import Dataset
-from painting.descriptor import compute_rgb_hist, compute_hsv_hist, compute_lbp
-from painting.utils import TRAIN_FOLDER, FEATURES_FOLDER
+from dataset import Dataset
+from descriptor import compute_feature
+from utils import TRAIN_FOLDER, TEST_FOLDER, RETRIEVAL_FOLDER, FEATURES_FOLDER 
 
 
-def compute_descriptor(dataset: Dataset, feature_size, descriptor_fn):
+
+
+def compute_descriptor(dataset: Dataset, descriptor_name):
     """
     :param dataset: Dataset instance
-    :param feature_size: features vector length
-    :param descriptor_fn: function that computes the feature for each image
-    :return features matrix
+    :param descriptor_name: the feature to compute for each image
     """
 
-    if not isinstance(feature_size, int):
-        raise ValueError("'features_size' must be an integer number")
-
-    if not callable(descriptor_fn):
-        raise ValueError("'descriptor_fn' must be callable")
-
     N = dataset.length()
-    features = np.zeros((N, feature_size))
+    folder_path = os.path.join(FEATURES_FOLDER, descriptor_name)
+
     for idx, img in enumerate(dataset.images()):
-        f = descriptor_fn(img)
-        features[idx, :] = f
+        f = compute_feature(img, descriptor_name)
         # print(f"{img.shape} -> {f.shape}")
-        if idx % 1000 == 0:
-            print(idx)
-    return features
+        file_name = ds._image_list[idx][ds._image_list[idx].rfind('/')+1:]
+
+        if not os.path.exists( folder_path ):
+            os.makedirs( folder_path )
+        np.save(os.path.join(folder_path, file_name), f)
+
+        if descriptor_name == 'ccv':
+            print( str(idx) +"/"+ str(N) )
+        else:
+            if idx % 1000 == 0:
+                print( str(idx) +"/"+ str(N) )
+        
+        
+    print( str(N) +"/"+ str(N) )
 
 
 if __name__ == "__main__":
-    ds = Dataset(TRAIN_FOLDER, (512, 512))
 
-    #features = compute_descriptor(ds, 692, compute_hsv_hist)
-    #np.save(os.path.join(FEATURES_FOLDER, "hsv_hist"), features)
+    ds = Dataset(RETRIEVAL_FOLDER, (512, 512))
 
-    # features = compute_descriptor(ds, 768, compute_rgb_hist)
-    # np.save(os.path.join(FEATURES_FOLDER, "rgb_hist"), features)
+    list_of_features = [
+        "hog", "hsv_hist", "lbp", 
+        "rgb_hist", "bow_sift",
+        "dct"] #"ccv"
 
-    features = compute_descriptor(ds, 18, compute_lbp)
-    np.save(os.path.join(FEATURES_FOLDER, "lbp"), features)
+    for feature in list_of_features:
+       print("Computing: " + feature)
+    

@@ -4,12 +4,18 @@ import numpy as np
 
 TRAIN_FOLDER = os.path.join(os.getcwd(), "data", "raw", "train")
 TEST_FOLDER = os.path.join(os.getcwd(), "data", "raw", "test")
+RETRIEVAL_FOLDER = os.path.join(os.getcwd(), "data", "raw", "retrieval")
 FEATURES_FOLDER = os.path.join(os.getcwd(), "data", "features")
 OUTPUT_FOLDER = os.path.join(os.getcwd(), "out")
 
 
 def load_features(feature):
-    if feature not in ["hog", "hsv_hist", "lbp", "rgb_hist", "bow_sift"]:
+    list_of_features = [
+        "hog", "hsv_hist", "lbp", 
+        "rgb_hist", "bow_sift",
+        "ccv", "dct"]
+        
+    if feature not in list_of_features:
         raise ValueError(f"unrecognized feature: '{feature}'")
 
     filepath = os.path.join(FEATURES_FOLDER, f"{feature}.npy")

@@ -13,6 +13,7 @@ from dataset import Dataset
 from descriptor import compute_feature
 from utils import TRAIN_FOLDER, TEST_FOLDER, RETRIEVAL_FOLDER, FEATURES_FOLDER 
 from utils import load_features, FEATURES_FOLDER, OUTPUT_FOLDER
+from utils import STANDARD_FEATURES_SIZE
 
 
 class ImageRetrieval:
@@ -24,7 +25,9 @@ class ImageRetrieval:
     def search(self, query, similarity="euclidean", n_results=5):
         start_time = perf_counter()
 
-        q = compute_feature(query, self.feature)  # query representation
+        # query representation
+        query = cv.resize(query, STANDARD_FEATURES_SIZE)
+        q = compute_feature(query, self.feature)  
 
         filename = f"{self.feature}-{similarity}.index"
         with open(os.path.join(FEATURES_FOLDER, filename), 'rb') as index:
@@ -38,6 +41,7 @@ class ImageRetrieval:
         start_time = perf_counter()
 
         # query representation
+        query = cv.resize(query, STANDARD_FEATURES_SIZE)
         q = compute_feature(query, self.feature)
 
         # load the raw document representation
@@ -131,11 +135,11 @@ if __name__ == "__main__":
     ir.index(metric)
 
     ids, dists, time = ir.search(image, metric, results)
-    print(dict(zip(ids, dists)))
+    #print(dict(zip(ids, dists)))
     print("Search Time with index: ", time)
 
     ids, dists, time = ir.search_without_index(image, metric, results)
-    print(dict(zip(ids, dists)))
+    #print(dict(zip(ids, dists)))
     print("Search Time without_index: ", time)
 
     #print(dists)

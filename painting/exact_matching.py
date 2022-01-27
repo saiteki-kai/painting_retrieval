@@ -7,6 +7,7 @@ import numpy as np
 import os
 from dataset import Dataset
 from utils import TRAIN_FOLDER, FEATURES_FOLDER
+from utils import STANDARD_FEATURES_SIZE
 
 
 def example():
@@ -160,7 +161,7 @@ def compute_descriptor(dataset: Dataset, feature_shape, descriptor_fn):
     return features
 
 def preprocess_orb():
-    ds = Dataset('/home/lfx/Desktop/Painting Detection/train/images/', (512, 512))
+    ds = Dataset('/home/lfx/Desktop/Painting Detection/train/images/', STANDARD_FEATURES_SIZE)
     features_kps = compute_descriptor(ds, (500, ), lambda x : compute_orb(x, n_features=500)[0])
     features_des = compute_descriptor(ds, (500, 32), lambda x : compute_orb(x, n_features=500)[1])
     np.save(os.path.join('.', "orb_kps"), features_kps)

@@ -56,7 +56,6 @@ def compute_hsv_hist(img):
 def compute_lbp(img):
     radius = 2
     n_points = radius * 8
-    #   cell_size = (512, 512)
 
     img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     lbp = local_binary_pattern(img, n_points, radius, "uniform")

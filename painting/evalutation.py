@@ -1,10 +1,11 @@
 from dataset import Dataset
 from metrics import recall_at_k, precision_at_k
 from retrieval import ImageRetrieval
-from utils import TRAIN_FOLDER, TEST_FOLDER, RETRIEVAL_FOLDER, FEATURES_FOLDER 
+from utils import TRAIN_FOLDER, TEST_FOLDER, RETRIEVAL_FOLDER, FEATURES_FOLDER
+from utils import STANDARD_FEATURES_SIZE
 
 if __name__ == "__main__":
-    ds = Dataset(RETRIEVAL_FOLDER, (512, 512))
+    ds = Dataset(RETRIEVAL_FOLDER, STANDARD_FEATURES_SIZE)
 
     retrieval = ImageRetrieval("rgb_hist")
     # retrieval.index("minkowski")

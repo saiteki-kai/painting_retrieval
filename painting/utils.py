@@ -8,6 +8,8 @@ RETRIEVAL_FOLDER = os.path.join(os.getcwd(), "data", "raw", "retrieval", "data")
 FEATURES_FOLDER = os.path.join(os.getcwd(), "data", "features")
 OUTPUT_FOLDER = os.path.join(os.getcwd(), "out")
 
+STANDARD_FEATURES_SIZE = (512, 512)
+
 
 def load_features(feature, list_files):
     list_of_features = [

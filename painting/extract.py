@@ -5,6 +5,7 @@ import numpy as np
 from dataset import Dataset
 from descriptor import compute_feature
 from utils import TRAIN_FOLDER, TEST_FOLDER, RETRIEVAL_FOLDER, FEATURES_FOLDER 
+from utils import STANDARD_FEATURES_SIZE
 
 
 
@@ -39,7 +40,7 @@ def compute_descriptor(dataset: Dataset, descriptor_name):
 
 if __name__ == "__main__":
 
-    ds = Dataset(RETRIEVAL_FOLDER, (512, 512))
+    ds = Dataset(RETRIEVAL_FOLDER, STANDARD_FEATURES_SIZE)
 
     list_of_features = [
         "hog", "hsv_hist", "lbp", 

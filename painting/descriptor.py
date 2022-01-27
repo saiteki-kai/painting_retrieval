@@ -2,14 +2,13 @@ import cv2 as cv
 import numpy as np
 from skimage.feature import local_binary_pattern
 from ccv import get_ccv
+from vgg_features_extraction import get_vgg
 
-def compute_feature(img, feature):
-    list_of_features = [
-        "hog", "hsv_hist", "lbp", 
-        "rgb_hist", "bow_sift",
-        "ccv", "dct"]
+from utils import LIST_OF_FEATURES_IMPLEMENTED
 
-    if feature not in list_of_features:
+def compute_feature(img, feature, vgg_level=None):
+
+    if feature not in LIST_OF_FEATURES_IMPLEMENTED:
         raise ValueError(f"unrecognized feature: '{feature}'")
 
     if feature == "rgb_hist":
@@ -20,10 +19,12 @@ def compute_feature(img, feature):
         return compute_lbp(img)
     elif feature == "hog":
         return compute_hog(img)
-    elif feature == "ccv":
-        return compute_ccv(img)
     elif feature == "dct":
         return compute_dct(img)
+    elif feature == "vgg":
+        return compute_vgg(img, vgg_level)
+    elif feature == "ccv":
+        return compute_ccv(img)
 
 
 
@@ -89,9 +90,6 @@ def compute_hog(img):
 
     return img
 
-def compute_ccv(img, n=2, tau=0.01):
-    return get_ccv(img, n=n, tau=tau) 
-
 def compute_dct(img):
     num_channels = img.shape[-1]
 
@@ -103,3 +101,9 @@ def compute_dct(img):
     dct = np.uint8(dct * 255)
 
     return dct
+
+def compute_vgg(dataset, vgg_level):
+    return get_vgg(dataset=dataset, level=vgg_level)
+
+def compute_ccv(img, n=2, tau=0.01):
+    return get_ccv(img, n=n, tau=tau) 

@@ -15,6 +15,8 @@ from utils import TRAIN_FOLDER, TEST_FOLDER, RETRIEVAL_FOLDER, FEATURES_FOLDER
 from utils import load_features, FEATURES_FOLDER, OUTPUT_FOLDER
 from utils import STANDARD_FEATURES_SIZE
 
+from vgg_features_extraction import get_vgg
+
 
 class ImageRetrieval:
     def __init__(self, feature, list_files, dataset):
@@ -25,9 +27,12 @@ class ImageRetrieval:
     def search(self, query, similarity="euclidean", n_results=5):
         start_time = perf_counter()
 
-        # query representation
-        query = cv.resize(query, STANDARD_FEATURES_SIZE)
-        q = compute_feature(query, self.feature)  
+       # query representation
+        if self.feature == 'vgg':
+            q = get_vgg(image_path=query, level=3)
+        else:
+            query = cv.resize(query, STANDARD_FEATURES_SIZE)
+            q = compute_feature(query, self.feature)
 
         filename = f"{self.feature}-{similarity}.index"
         with open(os.path.join(FEATURES_FOLDER, filename), 'rb') as index:
@@ -41,8 +46,11 @@ class ImageRetrieval:
         start_time = perf_counter()
 
         # query representation
-        query = cv.resize(query, STANDARD_FEATURES_SIZE)
-        q = compute_feature(query, self.feature)
+        if self.feature == 'vgg':
+            q = get_vgg(image_path=query, level=3)
+        else:
+            query = cv.resize(query, STANDARD_FEATURES_SIZE)
+            q = compute_feature(query, self.feature)
 
         # load the raw document representation
         features = load_features(self.feature, self.list_files)
@@ -76,6 +84,9 @@ class ImageRetrieval:
             ax.set_axis_off()
 
         # query image
+        if self.feature == 'vgg':
+            query = cv.imread(query)
+
         axes[0, 2].imshow(cv.cvtColor(query, cv.COLOR_BGR2RGB))
         axes[0, 2].set_title("query")
 
@@ -121,7 +132,8 @@ if __name__ == "__main__":
     ds = Dataset(RETRIEVAL_FOLDER)
     
     #image = ds.get_image_by_filename("34463.jpg")
-    image = ds.get_image_by_index(139)
+    index_im = 139
+    image = ds.get_image_by_index(index_im)
 
     metric = "euclidean"
     results = 5
@@ -130,18 +142,25 @@ if __name__ == "__main__":
     for i in range(len(ds._image_list)):
         list_files.append( ds._image_list[i][ds._image_list[i].rfind('/')+1:] )
 
-
-    ir = ImageRetrieval("rgb_hist", list_files, ds)
+    feature = "vgg"
+    ir = ImageRetrieval(feature, list_files, ds)
     ir.index(metric)
 
+    if feature == "vgg":
+        image = ds._image_list[index_im]
+
+    
     ids, dists, time = ir.search(image, metric, results)
     #print(dict(zip(ids, dists)))
     print("Search Time with index: ", time)
 
+    from keras.backend import clear_session as clear_session_keras
+    clear_session_keras()
+    
     ids, dists, time = ir.search_without_index(image, metric, results)
     #print(dict(zip(ids, dists)))
     print("Search Time without_index: ", time)
-
+    
     #print(dists)
     #print(ids)
 

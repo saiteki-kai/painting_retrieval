@@ -10,14 +10,20 @@ OUTPUT_FOLDER = os.path.join(os.getcwd(), "out")
 
 STANDARD_FEATURES_SIZE = (512, 512)
 
+# For semplicity let ccv the last (not mandatory)
+LIST_OF_FEATURES_IMPLEMENTED = [
+        "rgb_hist", 
+        "hsv_hist",
+        "lbp",
+        "hog",
+        "dct",
+        "vgg",
+        "ccv"]
+
 
 def load_features(feature, list_files):
-    list_of_features = [
-        "hog", "hsv_hist", "lbp", 
-        "rgb_hist", "bow_sift",
-        "ccv", "dct"]
         
-    if feature not in list_of_features:
+    if feature not in LIST_OF_FEATURES_IMPLEMENTED:
         raise ValueError(f"unrecognized feature: '{feature}'")
 
     filepath = os.path.join(FEATURES_FOLDER, feature)
@@ -26,8 +32,8 @@ def load_features(feature, list_files):
         raise IOError(f"feature '{feature}' not saved")
 
     N = len(list_files)
-    #This is just to set the feature_size)
     f = np.load( os.path.join(filepath, list_files[0]+".npy") )
+    #Just for performance 
     feature_size = len( f )
     saved_features = np.zeros((N, feature_size))
     saved_features[0, :] = f

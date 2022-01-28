@@ -85,6 +85,7 @@ class ImageRetrieval:
             ax.set_axis_off()
 
         # query image
+        #VGG want a path, not an image, so we need to read the image
         if self.feature == 'vgg':
             query = cv.imread(query)
 
@@ -136,7 +137,7 @@ if __name__ == "__main__":
     index_im = 139
     image = ds.get_image_by_index(index_im)
 
-    feature = "hsv_hist"
+    feature = "vgg"
     metric = "euclidean"
     results = 5
     list_files = []
@@ -148,7 +149,7 @@ if __name__ == "__main__":
     ir = ImageRetrieval(feature, list_files, ds)
     ir.index(metric)
 
-
+    #VGG want a path, not an image
     if feature == "vgg":
         image = ds._image_list[index_im]
 

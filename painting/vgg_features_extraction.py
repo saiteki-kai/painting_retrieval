@@ -1,4 +1,5 @@
 from tensorflow.keras.applications.vgg16 import VGG16
+from keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.preprocessing import image as image_vgg
 import numpy as np
 from tensorflow.keras.models import Model
@@ -15,11 +16,12 @@ from utils import FEATURES_FOLDER
 
 def get_vgg(image_path=None, dataset:Dataset=None, level=1):
   """
-    image:
+    image_path:
     dataset: A Dataset type. Doesn't matter the image_size of dataset. \
-      If image_path not None it won't be readed.
-    level:
-    save_path:
+      If image_path not None it won't be readed. 
+    level: level=1 cut at block4_pool,\
+          level=1 cut at block5_pool,\
+          else cut at fc2. 
   """
   #Clear memory
   clear_session_keras()
@@ -27,12 +29,23 @@ def get_vgg(image_path=None, dataset:Dataset=None, level=1):
 
   if image_path is not None:
     print('Image resized into (224,224).' )
-    #input_size = (224, 224)
-    #image = cv.resize(image, input_size)
-
+    
+    # STANDARD METHOD
     image = image_vgg.load_img( image_path, target_size=(224, 224, 3) )
     image = image_vgg.img_to_array(image)
     image = np.array([image])
+
+    """
+    #IT WORKS BUT WITH DIFFERENT RESULTS
+    from PIL import Image
+    image = cv.resize(image_path, (224, 224))
+    image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+    image = Image.fromarray(image)
+    image = image_vgg.img_to_array(image)
+    image = np.array([image])
+    """
+    #print(image)
+    #print( image.shape )
 
   elif dataset is not None:
     dim_dataset = dataset.length()

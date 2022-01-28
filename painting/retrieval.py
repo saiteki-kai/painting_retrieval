@@ -35,6 +35,7 @@ class ImageRetrieval:
             q = compute_feature(query, self.feature)
 
         filename = f"{self.feature}-{similarity}.index"
+
         with open(os.path.join(FEATURES_FOLDER, filename), 'rb') as index:
             NN = pickle.load(index)
             distances, indexes = NN.kneighbors([q], n_results)
@@ -135,6 +136,7 @@ if __name__ == "__main__":
     index_im = 139
     image = ds.get_image_by_index(index_im)
 
+    feature = "hsv_hist"
     metric = "euclidean"
     results = 5
     list_files = []
@@ -142,9 +144,10 @@ if __name__ == "__main__":
     for i in range(len(ds._image_list)):
         list_files.append( ds._image_list[i][ds._image_list[i].rfind('/')+1:] )
 
-    feature = "vgg"
+    
     ir = ImageRetrieval(feature, list_files, ds)
     ir.index(metric)
+
 
     if feature == "vgg":
         image = ds._image_list[index_im]
@@ -153,9 +156,6 @@ if __name__ == "__main__":
     ids, dists, time = ir.search(image, metric, results)
     #print(dict(zip(ids, dists)))
     print("Search Time with index: ", time)
-
-    from keras.backend import clear_session as clear_session_keras
-    clear_session_keras()
     
     ids, dists, time = ir.search_without_index(image, metric, results)
     #print(dict(zip(ids, dists)))
@@ -167,3 +167,13 @@ if __name__ == "__main__":
     ir.plot_similar_results(image, ids, distances=dists, n_results=results, save=False)
 
     # histogram: minkowski distance [p=1 (city-block), p=2 (euclidean)]
+    from metrics import precision, recall, average_precision
+    print("Precision: " + str( precision(ids, n_query=1, type_feature='Color') ))
+    print("Recall: " + str( recall(ids, n_query=1, type_feature='Color') ))
+    
+    """
+        #Just a test
+        ids = [139, 91, 135, 91, 26] # [R notR R notR R]
+        print("Average Precision: " + str( average_precision(ids, n_query=1, type_feature='Color', k=5) ))
+        print("Precision: " + str( precision(ids, n_query=1, type_feature='Color') ))
+    """

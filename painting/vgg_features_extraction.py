@@ -1,20 +1,16 @@
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.preprocessing import image as image_vgg
 import numpy as np
-from keras.layers import *
 from tensorflow.keras.models import Model
+
 # should clear keras models
 from keras.backend import clear_session as clear_session_keras 
-
-from utils import FEATURES_FOLDER 
-
 import gc
+
 import cv2 as cv
 import os
-
 from dataset import Dataset
-
-import tensorflow as tf
+from utils import FEATURES_FOLDER 
 
 
 def get_vgg(image_path=None, dataset:Dataset=None, level=1):

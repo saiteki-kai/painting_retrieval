@@ -87,10 +87,6 @@ class ImageRetrieval:
             ax.set_axis_off()
 
         # query image
-        #VGG want a path, not an image, so we need to read the image
-        #if self.feature == 'vgg':
-        #    query = cv.imread(query)
-
         axes[0, 2].imshow(cv.cvtColor(query, cv.COLOR_BGR2RGB))
         axes[0, 2].set_title("query")
 
@@ -150,11 +146,6 @@ if __name__ == "__main__":
     
     ir = ImageRetrieval(feature, list_files, ds)
     ir.index(metric)
-
-    #VGG want a path, not an image
-    #if feature == "vgg":
-    #    image = ds._image_list[index_im]
-
     
     ids, dists, time = ir.search(image, metric, results)
     #print(dict(zip(ids, dists)))

@@ -19,7 +19,6 @@ def preprocess_cv2_image(image):
   image = cv.resize(image, (224, 224))
   image =  cv.cvtColor(image, cv.COLOR_BGR2RGB)
   image = Image.fromarray(image)
-  #image = image.resize((224, 224))
   image = image_vgg.img_to_array(image)
   image = np.expand_dims(image, axis = 0)
   return preprocess_input(image)
@@ -33,12 +32,13 @@ def preprocess_vgg_standard(image):
 
 def get_vgg(image=None, dataset:Dataset=None, level=1):
   """
-    image:
+    image: An image opened with OpenCV2. \
+      Doesn't matter the size of the image. 
     dataset: A Dataset type. Doesn't matter the image_size of dataset. \
       If image not None it won't be readed. 
-    level: level=1 cut at block4_pool,\
-          level=1 cut at block5_pool,\
-          else cut at fc2. 
+    level: level=1 cut at block4_pool,
+          level=2 cut at block5_pool,
+          level=3 or else cut at fc2.
   """
   #Clear memory
   clear_session_keras()
@@ -66,7 +66,7 @@ def get_vgg(image=None, dataset:Dataset=None, level=1):
     model = Model(inputs=base_model.input, outputs=base_model.get_layer('block4_pool').output)
   elif level == 2:
     model = Model(inputs=base_model.input, outputs=base_model.get_layer('block5_pool').output)
-  else:
+  else: #level == 3 or else
     model = Model(inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
   
 
@@ -98,7 +98,7 @@ def get_vgg(image=None, dataset:Dataset=None, level=1):
       if not os.path.exists( folder_path ):
         os.makedirs( folder_path )
       np.save(os.path.join(folder_path, file_name), im.flatten() )
-    """ We just have to read the numpy.narray using numpy.load() """
+      """ We just have to read the numpy.narray using numpy.load() """
 
     print("{} / {} " .format(dim_dataset, dim_dataset))
   

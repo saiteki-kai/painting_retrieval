@@ -1,7 +1,8 @@
-import os.path
-
+import os
+import json
 import numpy as np
 
+DATA_FOLDER = os.path.join(os.getcwd(), "data")
 TRAIN_FOLDER = os.path.join(os.getcwd(), "data", "raw", "train")
 TEST_FOLDER = os.path.join(os.getcwd(), "data", "raw", "test")
 RETRIEVAL_FOLDER = os.path.join(os.getcwd(), "data", "raw", "retrieval", "data")
@@ -43,3 +44,17 @@ def load_features(feature, list_files):
         saved_features[i, :] = f
 
     return saved_features
+
+
+def load_groundtruth(query_id=None, feature_type=None):
+    with open(os.path.join(DATA_FOLDER, 'groundtruth.json')) as fp:
+        qrels = json.load(fp)
+
+        if query_id is None:
+            return qrels
+
+        q_obj = qrels[query_id]
+        if q_obj and feature_type is not None:
+            return q_obj['feature_types'][feature_type]
+    
+    return None

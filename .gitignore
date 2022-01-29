@@ -151,5 +151,5 @@ data/
 out/
 #Test files
 painting/test.py 
-test.py 
+a.txt
 

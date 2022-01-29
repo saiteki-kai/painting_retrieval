@@ -28,8 +28,9 @@ class ImageRetrieval:
         start_time = perf_counter()
 
        # query representation
+       #VGG want a level
         if self.feature == 'vgg':
-            q = get_vgg(image_path=query, level=3)
+            q = get_vgg(image=query, level=3)
         else:
             query = cv.resize(query, STANDARD_FEATURES_SIZE)
             q = compute_feature(query, self.feature)
@@ -47,8 +48,9 @@ class ImageRetrieval:
         start_time = perf_counter()
 
         # query representation
+        #VGG want a level
         if self.feature == 'vgg':
-            q = get_vgg(image_path=query, level=3)
+            q = get_vgg(image=query, level=3)
         else:
             query = cv.resize(query, STANDARD_FEATURES_SIZE)
             q = compute_feature(query, self.feature)
@@ -86,8 +88,8 @@ class ImageRetrieval:
 
         # query image
         #VGG want a path, not an image, so we need to read the image
-        if self.feature == 'vgg':
-            query = cv.imread(query)
+        #if self.feature == 'vgg':
+        #    query = cv.imread(query)
 
         axes[0, 2].imshow(cv.cvtColor(query, cv.COLOR_BGR2RGB))
         axes[0, 2].set_title("query")
@@ -150,8 +152,8 @@ if __name__ == "__main__":
     ir.index(metric)
 
     #VGG want a path, not an image
-    if feature == "vgg":
-        image = ds._image_list[index_im]
+    #if feature == "vgg":
+    #    image = ds._image_list[index_im]
 
     
     ids, dists, time = ir.search(image, metric, results)

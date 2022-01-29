@@ -1,24 +1,41 @@
 from tensorflow.keras.applications.vgg16 import VGG16
+from tensorflow.keras.models import Model
 from keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.preprocessing import image as image_vgg
-import numpy as np
-from tensorflow.keras.models import Model
 
 # should clear keras models
 from keras.backend import clear_session as clear_session_keras 
 import gc
 
 import cv2 as cv
+from PIL import Image
+import numpy as np
 import os
 from dataset import Dataset
 from utils import FEATURES_FOLDER 
 
+def preprocess_cv2_image(image):
+  #IT WORKS BUT WITH DIFFERENT RESULTS
+  image = cv.resize(image, (224, 224))
+  image =  cv.cvtColor(image, cv.COLOR_BGR2RGB)
+  image = Image.fromarray(image)
+  #image = image.resize((224, 224))
+  image = image_vgg.img_to_array(image)
+  image = np.expand_dims(image, axis = 0)
+  return preprocess_input(image)
 
-def get_vgg(image_path=None, dataset:Dataset=None, level=1):
+def preprocess_vgg_standard(image):
+  #STANDARD METHOD
+  image = image_vgg.load_img(image, target_size=(224, 224, 3) )
+  image = image_vgg.img_to_array(image)
+  image = np.array([image])
+  return preprocess_input(image)
+
+def get_vgg(image=None, dataset:Dataset=None, level=1):
   """
-    image_path:
+    image:
     dataset: A Dataset type. Doesn't matter the image_size of dataset. \
-      If image_path not None it won't be readed. 
+      If image not None it won't be readed. 
     level: level=1 cut at block4_pool,\
           level=1 cut at block5_pool,\
           else cut at fc2. 
@@ -27,25 +44,9 @@ def get_vgg(image_path=None, dataset:Dataset=None, level=1):
   clear_session_keras()
   gc.collect()
 
-  if image_path is not None:
+  if image is not None:
+    image = preprocess_cv2_image(image)
     print('Image resized into (224,224).' )
-    
-    # STANDARD METHOD
-    image = image_vgg.load_img( image_path, target_size=(224, 224, 3) )
-    image = image_vgg.img_to_array(image)
-    image = np.array([image])
-
-    """
-    #IT WORKS BUT WITH DIFFERENT RESULTS
-    from PIL import Image
-    image = cv.resize(image_path, (224, 224))
-    image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-    image = Image.fromarray(image)
-    image = image_vgg.img_to_array(image)
-    image = np.array([image])
-    """
-    #print(image)
-    #print( image.shape )
 
   elif dataset is not None:
     dim_dataset = dataset.length()
@@ -69,7 +70,7 @@ def get_vgg(image_path=None, dataset:Dataset=None, level=1):
     model = Model(inputs=base_model.input, outputs=base_model.get_layer('fc2').output)
   
 
-  if image_path is not None:
+  if image is not None:
     prediction = model.predict(image)
     
     #Clear memory
@@ -81,13 +82,14 @@ def get_vgg(image_path=None, dataset:Dataset=None, level=1):
 
   elif dataset is not None:
     for i in range(dim_dataset):
-      im = dataset.get_image_by_index_vgg(i)
+      im = dataset.get_image_by_index(i)
+      im = preprocess_cv2_image(im)
 
       if i % 100 == 0:
         print("{} / {} " .format(i+1, dim_dataset))
 
       im = model.predict(im)
-      im = im.reshape(im.shape[1:])
+      #im = im.reshape(im.shape[1:])
       
       file_name = dataset._image_list[i][dataset._image_list[i].rfind('/')+1:]
 

@@ -11,7 +11,7 @@ from sklearn.neighbors import NearestNeighbors
 import metrics as my_metrics
 from dataset import Dataset
 from descriptor import compute_feature
-from utils import TRAIN_FOLDER, TEST_FOLDER, RETRIEVAL_FOLDER, FEATURES_FOLDER 
+from utils import RETRIEVAL_FOLDER, FEATURES_FOLDER 
 from utils import load_features, FEATURES_FOLDER, OUTPUT_FOLDER
 from utils import STANDARD_FEATURES_SIZE
 
@@ -131,12 +131,25 @@ class ImageRetrieval:
 if __name__ == "__main__":
     ds = Dataset(RETRIEVAL_FOLDER)
     
-    #image = ds.get_image_by_filename("34463.jpg")
-    index_im = 139
-    image = ds.get_image_by_index(index_im)
+    n_query = 3
+    type_feature = 'Color' #can be 'Color', 'Global' or 'Texture'
 
-    feature = "vgg"
-    metric = "euclidean"
+    if n_query == 1:
+        index_query = 139
+        #image = ds.get_image_by_filename("34463.jpg") #query 1
+    elif n_query == 2:
+        index_query = 6
+        #image = ds.get_image_by_filename("96093.jpg") #query 2
+    elif n_query == 3:
+        index_query = 118
+        #image = ds.get_image_by_filename("19571.jpg") #query 3
+    else:
+        raise ValueError("'n_query' must be between 1 and 3.")
+
+    image = ds.get_image_by_index(index_query)
+
+    feature = "rgb_hist" # 'vgg' 'rgb_hist'
+    metric = "cosine" # 'cosine' 'euclidean'
     results = 5
     list_files = []
     #remove the path, we just want the file names
@@ -158,12 +171,15 @@ if __name__ == "__main__":
     #print(dists)
     #print(ids)
 
-    ir.plot_similar_results(image, ids, distances=dists, n_results=results, save=False)
-
     # histogram: minkowski distance [p=1 (city-block), p=2 (euclidean)]
-    from metrics import precision, recall, average_precision
-    print("Precision: " + str( precision(ids, n_query=1, type_feature='Color') ))
-    print("Recall: " + str( recall(ids, n_query=1, type_feature='Color') ))
+
+    from metrics import precision, recall, precision_at_k, recall_at_k, average_precision
+    print("Precision: " + str( precision(ids, n_query, type_feature) ))
+    print("Recall: " + str( recall(ids, n_query, type_feature) ))
+    print("Precision at k: " + str( precision_at_k(ids, n_query, type_feature, k=5) ))
+    print("Recall at k: " + str( recall_at_k(ids, n_query, type_feature, k=5) ))
+
+    ir.plot_similar_results(image, ids, distances=dists, n_results=results, save=False)
     
     """
         #Just a test

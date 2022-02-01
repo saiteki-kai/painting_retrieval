@@ -147,8 +147,10 @@ cython_debug/
 # PyCharm
 .idea/
 
-data/
 out/
+data/
+!data/raw/dataset/data_info.pkl
+
 #Test files
 painting/test.py 
 a.txt

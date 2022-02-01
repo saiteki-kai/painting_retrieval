@@ -2,7 +2,6 @@ import cv2 as cv
 import numpy as np
 from skimage.feature import local_binary_pattern
 from ccv import get_ccv
-from vgg_features_extraction import get_vgg
 
 from utils import LIST_OF_FEATURES_IMPLEMENTED
 
@@ -22,6 +21,7 @@ def compute_feature(img, feature, vgg_level=None):
     elif feature == "dct":
         return compute_dct(img)
     elif feature == "vgg":
+        from vgg_features_extraction import get_vgg
         return compute_vgg(img, vgg_level)
     elif feature == "ccv":
         return compute_ccv(img)

@@ -1,21 +1,29 @@
 from dataset import Dataset
 from metrics import recall_at_k, precision_at_k
 from retrieval import ImageRetrieval
-from utils import TRAIN_FOLDER, TEST_FOLDER, RETRIEVAL_FOLDER, FEATURES_FOLDER
+from utils import DATASET_FOLDER, FEATURES_FOLDER
 from utils import STANDARD_FEATURES_SIZE
+import pandas as pd
 
 if __name__ == "__main__":
-    ds = Dataset(RETRIEVAL_FOLDER, STANDARD_FEATURES_SIZE)
+    df = pd.read_pickle("./data/data_info.pkl")
+    ds = Dataset(df, DATASET_FOLDER, STANDARD_FEATURES_SIZE)
 
-    retrieval = ImageRetrieval("rgb_hist")
-    # retrieval.index("minkowski")
+    ir = ImageRetrieval("rgb_hist", ds)
 
-    image = ds.get_image_by_index(410)
+    query_id = 223
 
-    retrieved_ids, _, _ = retrieval.search(image, "minkowski", n_results=10)
-    relevant_ids = list([5129, 6309, 6499, -1, 1876, 503, -1, -1, 2844, -1])
+    retrieved_ids, _, _ = ir.search(query_id, "euclidean", n_results=10)
 
-    r = recall_at_k(relevant_ids, retrieved_ids)
-    p = precision_at_k(relevant_ids, retrieved_ids)
-    print(f"Precision: {p:.2f}")
-    print(f"Recall: {r:.2f}")
+    # TODO
+    relevant_ids = list([223, -1, 1467, -1, -1, 1441, 64, 533, 207, 1317])
+
+    res = ir.evaluate_query(
+        query_id,
+        relevant_ids,
+        metrics=["precision_at_k", "recall_at_k"],
+        distance="euclidean",
+        n_results=10,
+    )
+
+    print(res)

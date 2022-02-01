@@ -95,7 +95,7 @@ def get_vgg(image=None, dataset:Dataset=None, cut_level=1):
       im = model.predict(im)
       #im = im.reshape(im.shape[1:])
       
-      file_name = dataset._image_list[i][dataset._image_list[i].rfind('/')+1:]
+      file_name = dataset.get_image_filename(i)
 
       folder_path = os.path.join(FEATURES_FOLDER, 'vgg')
 
@@ -159,7 +159,7 @@ def get_resnet50(image=None, dataset:Dataset=None):
       im = model.predict(im)
       #im = im.reshape(im.shape[1:])
       
-      file_name = dataset._image_list[i][dataset._image_list[i].rfind('/')+1:]
+      file_name = dataset.get_image_filename(i)
 
       folder_path = os.path.join(FEATURES_FOLDER, 'resnet50')
 

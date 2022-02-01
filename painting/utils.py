@@ -1,8 +1,9 @@
-import os
-import json
 import glob
-import numpy as np
+import json
+import os
+
 import joblib
+import numpy as np
 
 DATA_FOLDER = os.path.join(os.getcwd(), "data")
 DATASET_FOLDER = os.path.join(os.getcwd(), "data", "raw", "dataset")

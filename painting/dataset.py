@@ -62,6 +62,13 @@ class Dataset:
     def length(self):
         return len(self._data)
 
+    def get_relevant_indexes(self, index):
+        query_genre = self._data["genre"][index]
+        docs_genres = self._data.loc[~self._data["in_train"]]["genre"]
+
+        relevant_ids = docs_genres.loc[docs_genres == query_genre].index
+        return list(relevant_ids)
+
 
 if __name__ == "__main__":
     from utils import DATASET_FOLDER
@@ -71,6 +78,7 @@ if __name__ == "__main__":
     print(ds.length())
     print(ds.get_image_by_index(0))
     # print(ds.get_image_by_filename("20.jpg"))
+    print(ds.get_relevant_indexes(3))
 
     # for (img, idx) in ds.images():
     #    print(img)

@@ -1,22 +1,20 @@
 import os
 import pickle
 from time import perf_counter
-import pandas as pd
+
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy
+import pandas as pd
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
 import metrics as my_metrics
 from dataset import Dataset
-from utils import get_image_id
 from descriptor import compute_feature
-from utils import RETRIEVAL_FOLDER, FEATURES_FOLDER, DATASET_FOLDER
-from utils import load_features, load_groundtruth, OUTPUT_FOLDER
-from utils import STANDARD_FEATURES_SIZE
-
-from vgg_features_extraction import get_vgg, get_resnet50
+from utils import (DATASET_FOLDER, FEATURES_FOLDER, OUTPUT_FOLDER,
+                   STANDARD_FEATURES_SIZE, load_features)
+from vgg_features_extraction import get_resnet50, get_vgg
 
 
 class ImageRetrieval:
@@ -145,7 +143,7 @@ class ImageRetrieval:
 if __name__ == "__main__":
     ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
 
-    query_id = 223
+    query_id = 1320
 
     feature = "rgb_hist"
     metric = "euclidean"

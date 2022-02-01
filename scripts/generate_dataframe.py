@@ -1,5 +1,5 @@
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 
 df = pd.read_csv("./data/all_data_info.csv")
@@ -19,6 +19,7 @@ print(df.info())
 
 # sample a subset for faster testing -------------------------
 import numpy as np
+
 N_train = 1000
 N_test = 500
 

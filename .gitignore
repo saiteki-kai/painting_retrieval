@@ -148,10 +148,13 @@ cython_debug/
 .idea/
 
 out/
-data/
-!data/raw/dataset/data_info.pkl
 
 #Test files
 painting/test.py 
 a.txt
 
+data/detection/
+data/features/
+data/raw/retrieval/
+data/raw/dataset/**
+!/data/raw/dataset/data_info.pkl

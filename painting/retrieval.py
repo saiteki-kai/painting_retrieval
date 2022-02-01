@@ -22,6 +22,8 @@ from utils import (
 from utils import load_features, load_groundtruth, FEATURES_FOLDER, OUTPUT_FOLDER
 from utils import STANDARD_FEATURES_SIZE
 
+from vgg_features_extraction import get_vgg, get_resnet50
+
 
 class ImageRetrieval:
     def __init__(self, feature, dataset):
@@ -31,11 +33,12 @@ class ImageRetrieval:
     def search(self, query_id, similarity="euclidean", n_results=5):
         start_time = perf_counter()
 
-        # query representation
-        # VGG want a level
-        if self.feature == "vgg":
-            # q = get_vgg(image=query, level=3)
-            pass
+       # query representation
+       #VGG want a cut_level
+        if self.feature == 'vgg':
+            q = get_vgg(image=query, cut_level=3)
+        elif self.feature == 'resnet50':
+            q = get_resnet50(image=query)
         else:
             query_img = self.dataset.get_image_by_index(query_id)
             query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
@@ -57,9 +60,11 @@ class ImageRetrieval:
         start_time = perf_counter()
 
         # query representation
-        # VGG want a level
-        if self.feature == "vgg":
-            q = get_vgg(image=query, level=3)
+        #VGG want a cut_level
+        if self.feature == 'vgg':
+            q = get_vgg(image=query, cut_level=3)
+        elif self.feature == 'resnet50':
+            q = get_resnet50(image=query)
         else:
             query_img = self.dataset.get_image_by_index(query_id)
             query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)

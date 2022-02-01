@@ -21,6 +21,10 @@ def compute_descriptor(dataset: Dataset, descriptor_name, vgg_level=1):
         compute_feature(dataset, descriptor_name, vgg_level=vgg_level)
         return
 
+    if descriptor_name == 'resnet50':
+        compute_feature(dataset, descriptor_name)
+        return
+
     N = dataset.length()
 
     # compute the feature on a random image to get the length
@@ -49,10 +53,8 @@ if __name__ == "__main__":
     ds = Dataset(df, DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
 
     # We avoit to do ccv for now (too slow)
-    list_of_features = [
-        x for x in LIST_OF_FEATURES_IMPLEMENTED if (x != "ccv" and x != "vgg")
-    ]
-    # list_of_features = ["rgb_hist", "hsv_hist", "lbp"]
+    avoid_list = ['ccv', 'vgg', 'resnet50']
+    list_of_features = [x for x in LIST_OF_FEATURES_IMPLEMENTED if (x not in avoid_list )]
 
     for feature in list_of_features:
         print("Computing: " + feature)
@@ -61,7 +63,10 @@ if __name__ == "__main__":
     # VGG features are special for now, we want to be able to specify the level
     # Once a level is fixed we can modify it and it will be the same of
     # the others
+    ds = Dataset(DATASET_FOLDER, (224, 224))
 
-    ds_vgg = Dataset(DATASET_FOLDER, (224, 224))
     print("Computing: vgg")
-    compute_descriptor(ds_vgg, "vgg", vgg_level=3)
+    compute_descriptor(ds, "vgg", vgg_level=3)
+
+    print("Computing: resnet50")
+    compute_descriptor(ds, "resnet50")

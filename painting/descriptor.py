@@ -2,8 +2,10 @@ import cv2 as cv
 import numpy as np
 from skimage.feature import local_binary_pattern
 from ccv import get_ccv
+from vgg_features_extraction import get_vgg, get_resnet50
 
 from utils import LIST_OF_FEATURES_IMPLEMENTED
+
 
 def compute_feature(img, feature, vgg_level=None):
 
@@ -22,10 +24,12 @@ def compute_feature(img, feature, vgg_level=None):
         return compute_dct(img)
     elif feature == "vgg":
         from vgg_features_extraction import get_vgg
+
         return compute_vgg(img, vgg_level)
+    elif feature == "resnet50":
+        return compute_resnet50(img)
     elif feature == "ccv":
         return compute_ccv(img)
-
 
 
 def compute_rgb_hist(img):
@@ -68,21 +72,6 @@ def compute_lbp(img):
     hist = hist / (np.linalg.norm(hist) + 1e-7)
     return hist.ravel()
 
-    # w, h = lbp.shape
-
-    # n_cell_x = int(w // cell_size[0])
-    # n_cell_y = int(h // cell_size[1])
-    # n_cells = np.prod(np.floor(lbp.shape / cell_size))
-
-    # out = []
-    # for i in range(0, w, cell_size[0]):
-    #     for j in range(0, h, cell_size[1]):
-    #         cell = lbp[i:(i + cell_size[0]), j:(j + cell_size[0])]
-    #         hist, _ = np.histogram(cell.ravel(), bins=bins, range=lims)
-    #         hist = hist / (np.linalg.norm(hist) + 1e-7)
-    #         out.append(hist.ravel())
-    #
-    # return np.array(out).ravel()
 
 def compute_hog(img):
     hog = cv.HOGDescriptor()
@@ -90,20 +79,27 @@ def compute_hog(img):
 
     return img
 
+
 def compute_dct(img):
     num_channels = img.shape[-1]
 
     if num_channels == 3:
         img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    
-    img = np.float32(img)/255.0
+
+    img = np.float32(img) / 255.0
     dct = cv.dct(img)
     dct = np.uint8(dct * 255)
 
     return dct
 
+
 def compute_vgg(dataset, vgg_level):
-    return get_vgg(dataset=dataset, level=vgg_level)
+    return get_vgg(dataset=dataset, cut_level=vgg_level)
+
+
+def compute_resnet50(dataset):
+    return get_resnet50(dataset=dataset)
+
 
 def compute_ccv(img, n=2, tau=0.01):
-    return get_ccv(img, n=n, tau=tau) 
+    return get_ccv(img, n=n, tau=tau)

@@ -68,22 +68,6 @@ def compute_lbp(img):
     hist = hist / (np.linalg.norm(hist) + 1e-7)
     return hist.ravel()
 
-    # w, h = lbp.shape
-
-    # n_cell_x = int(w // cell_size[0])
-    # n_cell_y = int(h // cell_size[1])
-    # n_cells = np.prod(np.floor(lbp.shape / cell_size))
-
-    # out = []
-    # for i in range(0, w, cell_size[0]):
-    #     for j in range(0, h, cell_size[1]):
-    #         cell = lbp[i:(i + cell_size[0]), j:(j + cell_size[0])]
-    #         hist, _ = np.histogram(cell.ravel(), bins=bins, range=lims)
-    #         hist = hist / (np.linalg.norm(hist) + 1e-7)
-    #         out.append(hist.ravel())
-    #
-    # return np.array(out).ravel()
-
 def compute_hog(img):
     hog = cv.HOGDescriptor()
     img = hog.compute(img)

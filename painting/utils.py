@@ -6,8 +6,6 @@ import joblib
 
 DATA_FOLDER = os.path.join(os.getcwd(), "data")
 DATASET_FOLDER = os.path.join(os.getcwd(), "data", "raw", "dataset")
-TRAIN_FOLDER = os.path.join(os.getcwd(), "data", "raw", "train")
-TEST_FOLDER = os.path.join(os.getcwd(), "data", "raw", "test")
 RETRIEVAL_FOLDER = os.path.join(os.getcwd(), "data", "raw", "retrieval")
 FEATURES_FOLDER = os.path.join(os.getcwd(), "data", "features")
 OUTPUT_FOLDER = os.path.join(os.getcwd(), "out")

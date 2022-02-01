@@ -49,8 +49,7 @@ def compute_descriptor(dataset: Dataset, descriptor_name, vgg_level=1):
 
 
 if __name__ == "__main__":
-    df = pd.read_pickle("./data/data_info.pkl")
-    ds = Dataset(df, DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
+    ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
 
     # We avoit to do ccv for now (too slow)
     avoid_list = ['ccv', 'vgg', 'resnet50']

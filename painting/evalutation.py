@@ -6,8 +6,7 @@ from utils import STANDARD_FEATURES_SIZE
 import pandas as pd
 
 if __name__ == "__main__":
-    df = pd.read_pickle("./data/data_info.pkl")
-    ds = Dataset(df, DATASET_FOLDER, STANDARD_FEATURES_SIZE)
+    ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
 
     ir = ImageRetrieval("rgb_hist", ds)
 

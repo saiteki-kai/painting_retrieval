@@ -12,14 +12,8 @@ import metrics as my_metrics
 from dataset import Dataset
 from utils import get_image_id
 from descriptor import compute_feature
-from utils import (
-    TRAIN_FOLDER,
-    TEST_FOLDER,
-    RETRIEVAL_FOLDER,
-    FEATURES_FOLDER,
-    DATASET_FOLDER,
-)
-from utils import load_features, load_groundtruth, FEATURES_FOLDER, OUTPUT_FOLDER
+from utils import RETRIEVAL_FOLDER, FEATURES_FOLDER, DATASET_FOLDER
+from utils import load_features, load_groundtruth, OUTPUT_FOLDER
 from utils import STANDARD_FEATURES_SIZE
 
 from vgg_features_extraction import get_vgg, get_resnet50
@@ -33,11 +27,11 @@ class ImageRetrieval:
     def search(self, query_id, similarity="euclidean", n_results=5):
         start_time = perf_counter()
 
-       # query representation
-       #VGG want a cut_level
-        if self.feature == 'vgg':
+        # query representation
+        # VGG want a cut_level
+        if self.feature == "vgg":
             q = get_vgg(image=query, cut_level=3)
-        elif self.feature == 'resnet50':
+        elif self.feature == "resnet50":
             q = get_resnet50(image=query)
         else:
             query_img = self.dataset.get_image_by_index(query_id)
@@ -60,10 +54,10 @@ class ImageRetrieval:
         start_time = perf_counter()
 
         # query representation
-        #VGG want a cut_level
-        if self.feature == 'vgg':
+        # VGG want a cut_level
+        if self.feature == "vgg":
             q = get_vgg(image=query, cut_level=3)
-        elif self.feature == 'resnet50':
+        elif self.feature == "resnet50":
             q = get_resnet50(image=query)
         else:
             query_img = self.dataset.get_image_by_index(query_id)
@@ -149,8 +143,7 @@ class ImageRetrieval:
 
 
 if __name__ == "__main__":
-    df = pd.read_pickle("./data/data_info.pkl")
-    ds = Dataset(df, DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
+    ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
 
     query_id = 223
 

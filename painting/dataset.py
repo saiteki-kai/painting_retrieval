@@ -5,11 +5,10 @@ import pandas as pd
 
 
 class Dataset:
-    def __init__(
-        self, data: pd.DataFrame, folder, image_size=None, custom_read_image=None
-    ):
-        self._data = data
+    def __init__(self, folder, image_size=None, custom_read_image=None):
         self._folder = folder
+        self._data = pd.read_pickle(os.path.join(folder, "data_info.pkl"))
+
         self._image_size = image_size
         self._custom_read_image = custom_read_image
 
@@ -67,12 +66,11 @@ class Dataset:
 if __name__ == "__main__":
     from utils import DATASET_FOLDER
 
-    df = pd.read_pickle("./data/data_info.pkl")
-    ds = Dataset(df, DATASET_FOLDER)
+    ds = Dataset(DATASET_FOLDER)
 
     print(ds.length())
-    print(ds.get_image_by_index(96382))
-    print(ds.get_image_by_filename("2.jpg"))
+    print(ds.get_image_by_index(0))
+    # print(ds.get_image_by_filename("20.jpg"))
 
     # for (img, idx) in ds.images():
     #    print(img)

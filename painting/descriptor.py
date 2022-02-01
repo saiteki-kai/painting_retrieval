@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from skimage.feature import local_binary_pattern
 from ccv import get_ccv
-from vgg_features_extraction import get_vgg
+from vgg_features_extraction import get_vgg, get_resnet50
 
 from utils import LIST_OF_FEATURES_IMPLEMENTED
 
@@ -23,6 +23,8 @@ def compute_feature(img, feature, vgg_level=None):
         return compute_dct(img)
     elif feature == "vgg":
         return compute_vgg(img, vgg_level)
+    elif feature == "resnet50":
+        return compute_resnet50(img)
     elif feature == "ccv":
         return compute_ccv(img)
 
@@ -87,7 +89,10 @@ def compute_dct(img):
     return dct
 
 def compute_vgg(dataset, vgg_level):
-    return get_vgg(dataset=dataset, level=vgg_level)
+    return get_vgg(dataset=dataset, cut_level=vgg_level)
+
+def compute_resnet50(dataset):
+    return get_resnet50(dataset=dataset)
 
 def compute_ccv(img, n=2, tau=0.01):
     return get_ccv(img, n=n, tau=tau) 

@@ -59,6 +59,7 @@ def get_vgg(image=None, dataset:Dataset=None, cut_level=1):
   """## Models"""
   #This give us all the model but the last layer
   base_model = VGG16(weights='imagenet')
+  #base_model.summary()
 
   """
   If we apply multiple cut we have multiple features. \
@@ -133,6 +134,7 @@ def get_resnet50(image=None, dataset:Dataset=None):
   """## Models"""
   #This give us all the model but the last layer
   base_model = ResNet50(weights='imagenet')
+  #base_model.summary()
   model = Model(inputs=base_model.input, outputs=base_model.get_layer('avg_pool').output)
   
 

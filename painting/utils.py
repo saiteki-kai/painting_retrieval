@@ -19,6 +19,7 @@ LIST_OF_FEATURES_IMPLEMENTED = [
         "hog",
         "dct",
         "vgg",
+        "resnet50",
         "ccv"]
 
 

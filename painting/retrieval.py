@@ -15,7 +15,7 @@ from utils import RETRIEVAL_FOLDER, FEATURES_FOLDER
 from utils import load_features, FEATURES_FOLDER, OUTPUT_FOLDER
 from utils import STANDARD_FEATURES_SIZE
 
-from vgg_features_extraction import get_vgg
+from vgg_features_extraction import get_vgg, get_resnet50
 
 
 class ImageRetrieval:
@@ -28,9 +28,11 @@ class ImageRetrieval:
         start_time = perf_counter()
 
        # query representation
-       #VGG want a level
+       #VGG want a cut_level
         if self.feature == 'vgg':
-            q = get_vgg(image=query, level=3)
+            q = get_vgg(image=query, cut_level=3)
+        elif self.feature == 'resnet50':
+            q = get_resnet50(image=query)
         else:
             query = cv.resize(query, STANDARD_FEATURES_SIZE)
             q = compute_feature(query, self.feature)
@@ -48,9 +50,11 @@ class ImageRetrieval:
         start_time = perf_counter()
 
         # query representation
-        #VGG want a level
+        #VGG want a cut_level
         if self.feature == 'vgg':
-            q = get_vgg(image=query, level=3)
+            q = get_vgg(image=query, cut_level=3)
+        elif self.feature == 'resnet50':
+            q = get_resnet50(image=query)
         else:
             query = cv.resize(query, STANDARD_FEATURES_SIZE)
             q = compute_feature(query, self.feature)
@@ -148,8 +152,8 @@ if __name__ == "__main__":
 
     image = ds.get_image_by_index(index_query)
 
-    feature = "rgb_hist" # 'vgg' 'rgb_hist'
-    metric = "cosine" # 'cosine' 'euclidean'
+    feature = "resnet50" # 'vgg' 'rgb_hist' 'resnet50'
+    metric = "euclidean" # 'cosine' 'euclidean'
     results = 5
     list_files = []
     #remove the path, we just want the file names

@@ -1,5 +1,5 @@
 from dataset import Dataset
-from metrics import precision_at_k, recall_at_k
+from evalutation_metrics import precision_at_k, recall_at_k
 from retrieval import ImageRetrieval
 from utils import DATASET_FOLDER, FEATURES_FOLDER, STANDARD_FEATURES_SIZE
 

@@ -4,7 +4,7 @@ from skimage.feature import local_binary_pattern
 
 from ccv import get_ccv
 from utils import LIST_OF_FEATURES_IMPLEMENTED
-from vgg_features_extraction import get_resnet50, get_vgg
+from features_extraction import get_resnet50, get_vgg
 
 
 def compute_feature(img, feature, vgg_level=None):
@@ -23,8 +23,6 @@ def compute_feature(img, feature, vgg_level=None):
     elif feature == "dct":
         return compute_dct(img)
     elif feature == "vgg":
-        from vgg_features_extraction import get_vgg
-
         return compute_vgg(img, vgg_level)
     elif feature == "resnet50":
         return compute_resnet50(img)

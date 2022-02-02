@@ -9,12 +9,12 @@ import pandas as pd
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
-import metrics as my_metrics
+import evalutation_metrics
 from dataset import Dataset
 from descriptor import compute_feature
 from utils import (DATASET_FOLDER, FEATURES_FOLDER, OUTPUT_FOLDER,
                    STANDARD_FEATURES_SIZE, load_features)
-from vgg_features_extraction import get_resnet50, get_vgg
+from features_extraction import get_resnet50, get_vgg
 
 
 class ImageRetrieval:
@@ -123,7 +123,7 @@ class ImageRetrieval:
         results = {}
         for m in metrics:
             try:
-                fn = getattr(my_metrics, m)
+                fn = getattr(evalutation_metrics, m)
                 results[m] = fn(relevant_ids, retrieved_ids, k=n_results)
             except Exception:
                 raise ValueError(f"Unknown metric function: {m}")

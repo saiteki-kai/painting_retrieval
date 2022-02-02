@@ -26,13 +26,13 @@ class ImageRetrieval:
         start_time = perf_counter()
 
         # query representation
-        # VGG want a cut_level
+        query_img = self.dataset.get_image_by_index(query_id)
+
         if self.feature == "vgg":
-            q = get_vgg(image=query, cut_level=3)
+            q = get_vgg(image=query_img, cut_level=3)
         elif self.feature == "resnet50":
-            q = get_resnet50(image=query)
+            q = get_resnet50(image=query_img)
         else:
-            query_img = self.dataset.get_image_by_index(query_id)
             query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
             q = compute_feature(query_img, self.feature)
 
@@ -52,13 +52,13 @@ class ImageRetrieval:
         start_time = perf_counter()
 
         # query representation
-        # VGG want a cut_level
+        query_img = self.dataset.get_image_by_index(query_id)
+
         if self.feature == "vgg":
-            q = get_vgg(image=query, cut_level=3)
+            q = get_vgg(image=query_img, cut_level=3)
         elif self.feature == "resnet50":
-            q = get_resnet50(image=query)
+            q = get_resnet50(image=query_img)
         else:
-            query_img = self.dataset.get_image_by_index(query_id)
             query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
             q = compute_feature(query_img, self.feature)
 

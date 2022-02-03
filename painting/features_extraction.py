@@ -3,7 +3,7 @@ from tensorflow.keras.models import Model
 from keras.applications.vgg16 import preprocess_input as preprocess_input_vgg
 from keras.applications.resnet import ResNet50 
 from keras.applications.resnet import preprocess_input as preprocess_input_resnet
-from tensorflow.keras.preprocessing import image as image_vgg
+from tensorflow.keras.preprocessing import image as image_f
 
 # should clear keras models
 from keras.backend import clear_session as clear_session_keras 
@@ -17,20 +17,18 @@ from dataset import Dataset
 from utils import FEATURES_FOLDER 
 
 def preprocess_cv2_image_vgg(image):
-  #IT WORKS BUT WITH DIFFERENT RESULTS
   image = cv.resize(image, (224, 224))
   image =  cv.cvtColor(image, cv.COLOR_BGR2RGB)
   image = Image.fromarray(image)
-  image = image_vgg.img_to_array(image)
+  image = image_f.img_to_array(image)
   image = np.expand_dims(image, axis = 0)
   return preprocess_input_vgg(image)
 
 def preprocess_cv2_image_resnet(image):
-  #IT WORKS BUT WITH DIFFERENT RESULTS
   image = cv.resize(image, (224, 224))
   image =  cv.cvtColor(image, cv.COLOR_BGR2RGB)
   image = Image.fromarray(image)
-  image = image_vgg.img_to_array(image)
+  image = image_f.img_to_array(image)
   image = np.expand_dims(image, axis = 0)
   return preprocess_input_resnet(image)
 

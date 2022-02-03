@@ -1,8 +1,7 @@
-import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
+import numpy as np
 
-df = pd.read_csv("./data/all_data_info.csv")
+df = pd.read_csv("./data/raw/dataset/all_data_info.csv")
 df.rename(columns={"new_filename": "filename"}, inplace=True)
 df.drop(columns=["pixelsx", "pixelsy", "size_bytes", "artist_group", "source"], inplace=True)
 df.dropna(subset=["genre"], inplace=True)
@@ -17,23 +16,25 @@ df["style"] = df["style"].astype("category")
 print(df.memory_usage(deep=True))
 print(df.info())
 
-# sample a subset for faster testing -------------------------
-import numpy as np
+"""
+    # sample a subset for faster testing -------------------------
 
-N_train = 1000
-N_test = 500
+    N_train = 1000
+    N_test = 500
 
-df_train = df.loc[df["in_train"]]
-df_test = df.loc[~df["in_train"]]
+    df_train = df.loc[df["in_train"]]
+    df_test = df.loc[~df["in_train"]]
 
-df_train = df_train.groupby('genre', group_keys=False).apply(lambda x: x.sample(int(np.rint(N_train*len(x)/len(df_train))))).sample(frac=1).reset_index(drop=True)
-df_test = df_test.groupby('genre', group_keys=False).apply(lambda x: x.sample(int(np.rint(N_test*len(x)/len(df_test))))).sample(frac=1).reset_index(drop=True)
+    df_train = df_train.groupby('genre', group_keys=False).apply(lambda x: x.sample(int(np.rint(N_train*len(x)/len(df_train))))).sample(frac=1).reset_index(drop=True)
+    df_test = df_test.groupby('genre', group_keys=False).apply(lambda x: x.sample(int(np.rint(N_test*len(x)/len(df_test))))).sample(frac=1).reset_index(drop=True)
 
-df = pd.concat([df_train, df_test])
-df.reset_index(drop=True, inplace=True)
-# ------------------------------------------------------------
+    df = pd.concat([df_train, df_test])
+    df.reset_index(drop=True, inplace=True)
+    # ------------------------------------------------------------
+"""
 
-df.to_pickle("./data/data_info.pkl")
+df.to_pickle("./data/raw/dataset/data_info.pkl")
+df.to_csv("./data/raw/dataset/data_info.csv")
 
 # fig = plt.figure(figsize=(15, 4))
 # ax = sns.countplot(df.loc[df["in_train"]]["genre"])

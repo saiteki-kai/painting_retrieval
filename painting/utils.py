@@ -4,6 +4,8 @@ import os
 
 import joblib
 import numpy as np
+import matplotlib.pyplot as plt
+import cv2 as cv
 
 DATA_FOLDER = os.path.join(os.getcwd(), "data")
 DATASET_FOLDER = os.path.join(os.getcwd(), "data", "raw", "dataset")
@@ -37,7 +39,23 @@ def load_features(feature):
 
     return joblib.load(filepath, mmap_mode="r+")
 
+def plot_image(image):
+        fig, axes = plt.subplots()
+
+        # hide axis
+        for ax in axes.ravel():
+            ax.set_axis_off()
+
+        # query image
+        axes[0, 2].imshow(
+            cv.cvtColor(image, cv.COLOR_BGR2RGB)
+        )
+        axes[0, 2].set_title("Image")
+
+        plt.show()
+
 
 if __name__ == "__main__":
     F = load_features("rgb_hist")
     print(F.shape)
+

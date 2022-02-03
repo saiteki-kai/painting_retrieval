@@ -2,10 +2,10 @@ import os
 import glob
 import cv2 as cv
 import pandas as pd
-
+from utils import STANDARD_FEATURES_SIZE
 
 class Dataset:
-    def __init__(self, folder, image_size=None, custom_read_image=None):
+    def __init__(self, folder, image_size=STANDARD_FEATURES_SIZE, custom_read_image=None):
         self._folder = folder
         self._data = pd.read_pickle(os.path.join(folder, "data_info.pkl"))
 
@@ -54,6 +54,12 @@ class Dataset:
     def get_image_filename(self, index):
         return self._data["filename"][index]
 
+    def get_image_index(self, filename):
+        for index in range(self._data.shape[0]): #n_row
+            if( self._data["filename"][index] == filename ):
+                return index
+        return -1
+
     def images(self):
         N = len(self._data)
         for i in range(N):
@@ -63,11 +69,21 @@ class Dataset:
         return len(self._data)
 
     def get_relevant_indexes(self, index):
+        """
+            List of index with same genre of the 'index' image.
+        """
         query_genre = self._data["genre"][index]
         docs_genres = self._data.loc[~self._data["in_train"]]["genre"]
 
         relevant_ids = docs_genres.loc[docs_genres == query_genre].index
         return list(relevant_ids)
+
+    def get_image_genre_by_index(self, index):
+        return self._data["genre"][index]
+
+    def get_image_genre_by_filename(self, filename):
+        index = self.get_image_index(filename)
+        return self._data["genre"][index] 
 
 
 if __name__ == "__main__":

@@ -28,7 +28,18 @@ def compute_feature(img, feature, vgg_level=None):
         return compute_resnet50(img)
     elif feature == "ccv":
         return compute_ccv(img)
+    elif feature == "orb_desc":
+        return compute_orb(img)[1]
+    elif feature == "orb_kps":
+        return compute_orb(img)[0]
 
+def compute_orb(img, n_features=500):
+    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    orb = cv.ORB_create(nfeatures=n_features)
+    kp1, des1 = orb.detectAndCompute(gray, None)
+    kp1 = np.asarray(kp1)
+    des1 = np.asarray(des1)
+    return kp1, des1
 
 def compute_rgb_hist(img):
     blue_hist = cv.calcHist([img], [0], None, [256], [0, 256])

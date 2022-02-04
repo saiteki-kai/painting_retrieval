@@ -25,6 +25,8 @@ LIST_OF_FEATURES_IMPLEMENTED = [
     "vgg",
     "resnet50",
     "ccv",
+    "orb_desc",
+    "orb_kps"
 ]
 
 
@@ -40,19 +42,19 @@ def load_features(feature):
     return joblib.load(filepath, mmap_mode="r+")
 
 def plot_image(image):
-        fig, axes = plt.subplots()
+    fig, axes = plt.subplots()
 
-        # hide axis
-        for ax in axes.ravel():
-            ax.set_axis_off()
+    # hide axis
+    for ax in axes.ravel():
+        ax.set_axis_off()
 
-        # query image
-        axes[0, 2].imshow(
-            cv.cvtColor(image, cv.COLOR_BGR2RGB)
-        )
-        axes[0, 2].set_title("Image")
+    # query image
+    axes[0, 2].imshow(
+        cv.cvtColor(image, cv.COLOR_BGR2RGB)
+    )
+    axes[0, 2].set_title("Image")
 
-        plt.show()
+    plt.show()
 
 
 if __name__ == "__main__":

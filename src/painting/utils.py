@@ -2,10 +2,10 @@ import glob
 import json
 import os
 
-import joblib
-import numpy as np
-import matplotlib.pyplot as plt
 import cv2 as cv
+import joblib
+import matplotlib.pyplot as plt
+import numpy as np
 
 DATA_FOLDER = os.path.join(os.getcwd(), "data")
 DATASET_FOLDER = os.path.join(os.getcwd(), "data", "raw", "dataset")

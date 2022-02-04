@@ -1,15 +1,15 @@
 import os
 
+import cv2 as cv
 import numpy as np
 import pandas as pd
-import cv2 as cv
-from joblib import Parallel, delayed, load, dump
+from joblib import Parallel, delayed, dump, load
 
-from dataset import Dataset
-from descriptor import compute_feature
-from utils import DATASET_FOLDER, FEATURES_FOLDER
-from utils import STANDARD_FEATURES_SIZE
-from utils import LIST_OF_FEATURES_IMPLEMENTED
+from ..painting.dataset import Dataset
+from ..painting.descriptor import compute_feature
+from ..painting.utils import (DATASET_FOLDER, FEATURES_FOLDER,
+                              LIST_OF_FEATURES_IMPLEMENTED,
+                              STANDARD_FEATURES_SIZE)
 
 
 def compute_descriptor(dataset: Dataset, descriptor_name, vgg_level=1):

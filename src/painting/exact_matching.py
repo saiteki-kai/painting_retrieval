@@ -1,14 +1,14 @@
+import os
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from skimage.measure import ransac
-from skimage.transform import ProjectiveTransform, AffineTransform
-import numpy as np
-import os
-from dataset import Dataset
-from utils import TRAIN_FOLDER, FEATURES_FOLDER
-from utils import STANDARD_FEATURES_SIZE
+from skimage.transform import AffineTransform, ProjectiveTransform
 
+from ..painting.dataset import Dataset
+from ..painting.utils import (FEATURES_FOLDER, STANDARD_FEATURES_SIZE,
+                              TRAIN_FOLDER)
 
 
 def compute_score(matches, n_inliers):

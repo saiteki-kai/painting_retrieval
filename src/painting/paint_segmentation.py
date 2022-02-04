@@ -1,11 +1,12 @@
 import os
-import numpy as np
+
 import cv2
 import matplotlib.pyplot as plt
-from scipy import ndimage as ndi
+import numpy as np
 import skimage.exposure as exposure
-from skimage.morphology import convex_hull_image
 from medpy.filter.smoothing import anisotropic_diffusion
+from scipy import ndimage as ndi
+from skimage.morphology import convex_hull_image
 
 
 def resize_with_max_ratio(image, max_h, max_w):

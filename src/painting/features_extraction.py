@@ -1,20 +1,24 @@
-from tensorflow.keras.applications.vgg16 import VGG16
-from tensorflow.keras.models import Model
-from keras.applications.vgg16 import preprocess_input as preprocess_input_vgg
-from keras.applications.resnet import ResNet50 
-from keras.applications.resnet import preprocess_input as preprocess_input_resnet
-from tensorflow.keras.preprocessing import image as image_f
-
-# should clear keras models
-from keras.backend import clear_session as clear_session_keras 
 import gc
+import os
 
 import cv2 as cv
-from PIL import Image
 import numpy as np
-import os
-from dataset import Dataset
-from utils import FEATURES_FOLDER 
+from keras.applications.resnet import ResNet50
+from keras.applications.resnet import \
+    preprocess_input as preprocess_input_resnet
+from keras.applications.vgg16 import preprocess_input as preprocess_input_vgg
+
+# should clear keras models
+from keras.backend import clear_session as clear_session_keras
+
+from PIL import Image
+from tensorflow.keras.applications.vgg16 import VGG16
+from tensorflow.keras.models import Model
+from tensorflow.keras.preprocessing import image as image_f
+
+from ..painting.dataset import Dataset
+from ..painting.utils import FEATURES_FOLDER
+
 
 def preprocess_cv2_image_vgg(image):
   image = cv.resize(image, (224, 224))

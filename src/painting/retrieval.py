@@ -9,17 +9,16 @@ import pandas as pd
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
-import evalutation_metrics
-from dataset import Dataset
-from descriptor import compute_feature
-from utils import (
+from ..painting.dataset import Dataset
+from ..painting.descriptor import compute_feature
+from ..painting.evalutation_metrics import *
+from ..painting.utils import (
     DATASET_FOLDER,
     FEATURES_FOLDER,
     OUTPUT_FOLDER,
     STANDARD_FEATURES_SIZE,
     load_features,
 )
-from features_extraction import get_resnet50, get_vgg
 
 
 class ImageRetrieval:
@@ -28,15 +27,22 @@ class ImageRetrieval:
         self.dataset = dataset
         self.evalutation = evalutation
 
-    def search(self, query_id, similarity="euclidean", n_results=5):
+    def search(self, query, similarity="euclidean", n_results=5):
         start_time = perf_counter()
 
         # query representation
-        query_img = self.dataset.get_image_by_index(query_id)
+        if query is int:
+            query_img = self.dataset.get_image_by_index(query)
+        else:
+            query_img = query
 
         if self.feature == "vgg":
+            from features_extraction import get_vgg
+
             q = get_vgg(image=query_img, cut_level=3)
         elif self.feature == "resnet50":
+            from features_extraction import get_resnet50
+
             q = get_resnet50(image=query_img)
         else:
             query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
@@ -61,8 +67,12 @@ class ImageRetrieval:
         query_img = self.dataset.get_image_by_index(query_id)
 
         if self.feature == "vgg":
+            from features_extraction import get_vgg
+
             q = get_vgg(image=query_img, cut_level=3)
         elif self.feature == "resnet50":
+            from features_extraction import get_resnet50
+
             q = get_resnet50(image=query_img)
         else:
             query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
@@ -70,7 +80,7 @@ class ImageRetrieval:
 
         # load the raw document representation
         features = load_features(self.feature)
-        
+
         # select only features from the test collection
         if self.evalutation:
             indexes = self.dataset.get_test_indexes()
@@ -100,7 +110,7 @@ class ImageRetrieval:
         NN = NearestNeighbors(metric=similarity).fit(features)
 
         subfolder = "evaluation" if self.evalutation else ""
-        
+
         filename = f"{self.feature}-{similarity}.index"
         with open(os.path.join(FEATURES_FOLDER, subfolder, filename), "wb") as index:
             pickle.dump(NN, index)
@@ -135,9 +145,9 @@ class ImageRetrieval:
             plt.show()
 
     def evaluate_query(
-        self, query_id, relevant_ids, metrics, distance="euclidean", n_results=5
+        self, query_id, relevant_ids, metrics, similarity="euclidean", n_results=5
     ):
-        retrieved_ids, _, _ = self.search(query_id, distance, n_results)
+        retrieved_ids, _, _ = self.search(query_id, similarity, n_results)
 
         results = {}
         for m in metrics:
@@ -149,14 +159,32 @@ class ImageRetrieval:
 
         return results
 
-    def evaluate_queries(self, query_ids, relevant_ids, metrics, n_results=5):
+    def evaluate_queries(
+        self, query_ids, relevant_ids, metrics, similarity="euclidean", n_results=5
+    ):
         results = []
 
         for i, query_id in enumerate(query_ids):
-            res = self.evaluate_query(query_id, relevant_ids[i], metrics, n_results)
+            res = self.evaluate_query(
+                query_id, relevant_ids[i], metrics, similarity, n_results
+            )
             results.append(res)
 
         return results
+
+
+def retrieve_images(img, feature, similarity="euclidean", n_features=5):
+    ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
+
+    # MATCHING
+    # yield primo messaggio nel bot (matching / non matching), se possibile ?
+
+    ir = ImageRetrieval(feature, ds)
+
+    ids, dists, time = ir.search(img, similarity, n_features)
+    print("Search Time with index: ", time)
+
+    return [ds.get_image_filepath(idx) for idx in ids], time, dists
 
 
 if __name__ == "__main__":

@@ -2,7 +2,8 @@ import os
 import glob
 import cv2 as cv
 import pandas as pd
-from utils import STANDARD_FEATURES_SIZE
+
+from ..painting.utils import STANDARD_FEATURES_SIZE
 
 
 class Dataset:
@@ -66,6 +67,9 @@ class Dataset:
 
     def get_image_filename(self, index):
         return self._data["filename"][index]
+    
+    def get_image_filepath(self, index):
+        return self._get_image_path(self._data["filename"][index])
 
     def get_image_index(self, filename):
         for index in range(self._data.shape[0]):  # n_row

@@ -2,11 +2,14 @@ import os
 import tempfile
 import time
 
+import cv2 as cv
 from dotenv import load_dotenv
-from telegram import Bot
+from telegram import Bot, InputMediaPhoto
 from telegram.ext import Updater, Filters, MessageHandler
 
-from edges import edges
+from ..painting.dataset import Dataset
+from ..painting.retrieval import retrieve_images
+from ..painting.utils import DATASET_FOLDER, STANDARD_FEATURES_SIZE
 
 
 def photo_handler(update, ctx):
@@ -25,20 +28,30 @@ def photo_handler(update, ctx):
         ctx.bot.sendMessage(chat_id, "Hi, please wait until the image is ready")
 
         start_time = time.perf_counter()
-        edges(tmp.name)
+
+        img = cv.imread(tmp.name)
+        retrieved_img_paths, retrieve_time, dists = retrieve_images(img, "rgb_hist")
+
         elapsed = time.perf_counter() - start_time
 
         caption = f"The execution took {elapsed:.3f} seconds"
 
-        with open(tmp.name, 'rb') as photo:
-            ctx.bot.sendPhoto(chat_id, photo, caption=caption)
+        images = []
+        for i, f in enumerate(retrieved_img_paths):
+            with open(f, "rb") as img:
+                images.append(InputMediaPhoto(img, caption=f"Image: {i + 1}, Distance: {dists[i]}"))
+
+        ctx.bot.sendMediaGroup(chat_id, images)
+        ctx.bot.sendMessage(chat_id, caption)
 
 
-if __name__ == '__main__':
+def start_bot():
     load_dotenv(".env")
     TOKEN = os.getenv("TOKEN")
 
     bot = Bot(TOKEN)
+
+    print("Bot started")
 
     updater = Updater(TOKEN)
     updater.dispatcher.add_handler(MessageHandler(Filters.photo, photo_handler))

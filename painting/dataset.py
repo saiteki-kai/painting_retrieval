@@ -4,10 +4,23 @@ import cv2 as cv
 import pandas as pd
 from utils import STANDARD_FEATURES_SIZE
 
+
 class Dataset:
-    def __init__(self, folder, image_size=STANDARD_FEATURES_SIZE, custom_read_image=None):
+    def __init__(
+        self,
+        folder,
+        image_size=STANDARD_FEATURES_SIZE,
+        custom_read_image=None,
+        testonly=False,
+    ):
         self._folder = folder
+        self._testonly = testonly
         self._data = pd.read_pickle(os.path.join(folder, "data_info.pkl"))
+
+        if self._testonly:
+            self._data = self._data.loc[~self._data["in_train"]]
+            self._prev_test_index = self._data.loc[~self._data["in_train"]].index
+            self._data.reset_index(drop=True, inplace=True)
 
         self._image_size = image_size
         self._custom_read_image = custom_read_image
@@ -55,8 +68,8 @@ class Dataset:
         return self._data["filename"][index]
 
     def get_image_index(self, filename):
-        for index in range(self._data.shape[0]): #n_row
-            if( self._data["filename"][index] == filename ):
+        for index in range(self._data.shape[0]):  # n_row
+            if self._data["filename"][index] == filename:
                 return index
         return -1
 
@@ -70,9 +83,9 @@ class Dataset:
 
     def get_relevant_indexes(self, index):
         """
-            List of index with same genre of the 'index' image.
+        List of index with same genre of the 'index' image.
         """
-        query_genre = self._data["genre"][index]
+        query_genre = self.get_image_genre_by_index(index)
         docs_genres = self._data.loc[~self._data["in_train"]]["genre"]
 
         relevant_ids = docs_genres.loc[docs_genres == query_genre].index
@@ -83,7 +96,10 @@ class Dataset:
 
     def get_image_genre_by_filename(self, filename):
         index = self.get_image_index(filename)
-        return self._data["genre"][index] 
+        return self.get_image_genre_by_index(index)
+
+    def get_test_indexes(self):
+        return list(self._prev_test_index)
 
 
 if __name__ == "__main__":

@@ -12,15 +12,21 @@ from sklearn.neighbors import NearestNeighbors
 import evalutation_metrics
 from dataset import Dataset
 from descriptor import compute_feature
-from utils import (DATASET_FOLDER, FEATURES_FOLDER, OUTPUT_FOLDER,
-                   STANDARD_FEATURES_SIZE, load_features)
+from utils import (
+    DATASET_FOLDER,
+    FEATURES_FOLDER,
+    OUTPUT_FOLDER,
+    STANDARD_FEATURES_SIZE,
+    load_features,
+)
 from features_extraction import get_resnet50, get_vgg
 
 
 class ImageRetrieval:
-    def __init__(self, feature, dataset):
+    def __init__(self, feature, dataset, evalutation=False):
         self.feature = feature
         self.dataset = dataset
+        self.evalutation = evalutation
 
     def search(self, query_id, similarity="euclidean", n_results=5):
         start_time = perf_counter()
@@ -64,6 +70,11 @@ class ImageRetrieval:
 
         # load the raw document representation
         features = load_features(self.feature)
+        
+        # select only features from the test collection
+        if self.evalutation:
+            indexes = self.dataset.get_test_indexes()
+            features = features[indexes]
 
         # compute distances between the query and the documents
         distances = pairwise_distances([q], features, metric=similarity)
@@ -80,10 +91,18 @@ class ImageRetrieval:
 
     def index(self, similarity):
         features = load_features(self.feature)
+
+        # select only features from the test collection
+        if self.evalutation:
+            indexes = self.dataset.get_test_indexes()
+            features = features[indexes]
+
         NN = NearestNeighbors(metric=similarity).fit(features)
 
+        subfolder = "evaluation" if self.evalutation else ""
+        
         filename = f"{self.feature}-{similarity}.index"
-        with open(os.path.join(FEATURES_FOLDER, filename), "wb") as index:
+        with open(os.path.join(FEATURES_FOLDER, subfolder, filename), "wb") as index:
             pickle.dump(NN, index)
 
     def plot_similar_results(

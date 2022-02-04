@@ -65,11 +65,16 @@ def recall_at_k(relevant, retrieved, k=None):
 def average_precision(relevant, retrieved, k=None):
     n = 0  # number of relevant docs
     ap = 0
+
     for i in range(k):
         if retrieved[i] in relevant:
             pi = precision_at_k(relevant, retrieved, i + 1)
             ap = ap + pi
             n = n + 1
+
+    if n == 0:
+        return 0
+
     return ap / n
 
 

@@ -159,3 +159,6 @@ data/raw/retrieval/
 data/raw/dataset/**
 !/data/raw/dataset/data_info.pkl
 !/data/raw/dataset/data_info.csv
+
+model/**
+!/model/resnet_finetuing_model.zip

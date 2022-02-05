@@ -1,11 +1,13 @@
 import os
+from pathlib import Path
 
-BASE_FOLDER = os.path.abspath(".")
-DATA_FOLDER = os.path.join(BASE_FOLDER, "data")
-DATASET_FOLDER = os.path.join(BASE_FOLDER, "data", "raw", "dataset")
-FEATURES_FOLDER = os.path.join(BASE_FOLDER, "data", "features")
-OUTPUT_FOLDER = os.path.join(BASE_FOLDER, "out")
-MODEL_FOLDER = os.path.join(BASE_FOLDER, "model")
+ROOT_FOLDER = Path(__file__).parent.parent
+
+DATA_FOLDER = os.path.join(ROOT_FOLDER, "data")
+DATASET_FOLDER = os.path.join(ROOT_FOLDER, "data", "raw", "dataset")
+FEATURES_FOLDER = os.path.join(ROOT_FOLDER, "data", "features")
+OUTPUT_FOLDER = os.path.join(ROOT_FOLDER, "out")
+MODEL_FOLDER = os.path.join(ROOT_FOLDER, "model")
 
 STANDARD_FEATURES_SIZE = (512, 512)
 
@@ -19,4 +21,11 @@ LIST_OF_FEATURES_IMPLEMENTED = [
     "resnet50",
     "ccv",
     "orb"
+]
+
+SIMILARITY_DISTANCES = [
+    "euclidean",
+    "cosine",
+    "manhattan",
+    "chebyshev"
 ]

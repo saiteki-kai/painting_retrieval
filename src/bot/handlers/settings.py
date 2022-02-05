@@ -25,6 +25,7 @@ def set_similarity_handler(update: Update, ctx: CallbackContext):
         [InlineKeyboardButton("Euclidean", callback_data="euclidean")],
         [InlineKeyboardButton("Cosine", callback_data="cosine")],
         [InlineKeyboardButton("Manhattan", callback_data="manhattan")],
+        [InlineKeyboardButton("Chebyshev", callback_data="chebyshev")],
     ]
 
     update.message.reply_text(

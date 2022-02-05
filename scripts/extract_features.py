@@ -9,7 +9,7 @@ if __name__ == "__main__":
     avoid_list = ['ccv', 'resnet50']
     list_of_features = [x for x in LIST_OF_FEATURES_IMPLEMENTED if x not in avoid_list]
 
-    list_of_features = ["rgb_hist"]
+    # list_of_features = ["rgb_hist"]
     for feature in list_of_features:
         print("Computing: " + feature)
         compute_descriptor(ds, feature)

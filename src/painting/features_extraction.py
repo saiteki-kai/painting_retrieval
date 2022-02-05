@@ -16,10 +16,8 @@ from PIL import Image
 from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing import image as image_f
 
-from dataset import Dataset
-from utils import FEATURES_FOLDER, MODEL_FOLDER
-#from ..painting.dataset import Dataset
-#from ..painting.utils import FEATURES_FOLDER, MODEL_FOLDER
+from ..painting.dataset import Dataset
+from ..painting.utils import FEATURES_FOLDER, MODEL_FOLDER
 
 
 def preprocess_cv2_image_resnet(image):

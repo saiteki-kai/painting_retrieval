@@ -4,11 +4,15 @@ import cv2 as cv
 import joblib
 import matplotlib.pyplot as plt
 
-DATA_FOLDER = os.path.join(os.getcwd(), "data")
-DATASET_FOLDER = os.path.join(os.getcwd(), "data", "raw", "dataset")
-RETRIEVAL_FOLDER = os.path.join(os.getcwd(), "data", "raw", "retrieval")
-FEATURES_FOLDER = os.path.join(os.getcwd(), "data", "features")
-OUTPUT_FOLDER = os.path.join(os.getcwd(), "out")
+#BASE_FOLDER = os.path.dirname(os.getcwd())
+BASE_FOLDER = os.getcwd()
+DATA_FOLDER = os.path.join(BASE_FOLDER, "data")
+DATASET_FOLDER = os.path.join(BASE_FOLDER, "data", "raw", "dataset")
+RETRIEVAL_FOLDER = os.path.join(BASE_FOLDER, "data", "raw", "retrieval")
+FEATURES_FOLDER = os.path.join(BASE_FOLDER, "data", "features")
+OUTPUT_FOLDER = os.path.join(BASE_FOLDER, "out")
+MODEL_FOLDER = os.path.join(BASE_FOLDER, "model")
+
 
 STANDARD_FEATURES_SIZE = (512, 512)
 
@@ -19,7 +23,6 @@ LIST_OF_FEATURES_IMPLEMENTED = [
     "lbp",
     "hog",
     "dct",
-    "vgg",
     "resnet50",
     "ccv",
     "orb_desc",
@@ -40,19 +43,13 @@ def load_features(feature):
 
 
 def plot_image(image):
-    fig, axes = plt.subplots()
 
-    # hide axis
-    for ax in axes.ravel():
-        ax.set_axis_off()
-
-    # query image
-    axes[0, 2].imshow(
-        cv.cvtColor(image, cv.COLOR_BGR2RGB)
-    )
-    axes[0, 2].set_title("Image")
-
+    image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+    # displaying image
+    plt.imshow(image)
+    plt.axis('off')
     plt.show()
+
 
 
 if __name__ == "__main__":

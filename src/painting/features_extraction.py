@@ -1,21 +1,25 @@
-import gc
 import os
 
 import cv2 as cv
 import numpy as np
+from keras.models import load_model
+import tensorflow_addons as tfa #Used in saved_model
 from keras.applications.resnet import ResNet50
 from keras.applications.resnet import \
     preprocess_input as preprocess_input_resnet
 
 # should clear keras models
 from keras.backend import clear_session as clear_session_keras
+import gc
 
 from PIL import Image
 from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing import image as image_f
 
-from ..painting.dataset import Dataset
-from ..painting.utils import FEATURES_FOLDER
+from dataset import Dataset
+from utils import FEATURES_FOLDER, MODEL_FOLDER
+#from ..painting.dataset import Dataset
+#from ..painting.utils import FEATURES_FOLDER, MODEL_FOLDER
 
 
 def preprocess_cv2_image_resnet(image):
@@ -26,7 +30,7 @@ def preprocess_cv2_image_resnet(image):
   image = np.expand_dims(image, axis = 0) #maybe not
   return preprocess_input_resnet(image)
 
-def get_resnet50(image=None, dataset:Dataset=None):
+def get_resnet50(image=None, dataset:Dataset=None, model_name='resnet_model'):
   """
     image: An image opened with OpenCV2. \
       Doesn't matter the size of the image. 
@@ -47,9 +51,14 @@ def get_resnet50(image=None, dataset:Dataset=None):
 
   """## Models"""
   #This give us all the model but the last layer
-  base_model = ResNet50(weights='imagenet')
-  #base_model.summary()
-  model = Model(inputs=base_model.input, outputs=base_model.get_layer('avg_pool').output)
+  #base_model = ResNet50(weights='imagenet')
+  base_model = load_model( os.path.join(MODEL_FOLDER, model_name) )
+
+  #base_model.summary() # Summary 
+  #print([layer.name for layer in base_model.layers]) # Layer's name
+
+  #model = Model(inputs=base_model.input, outputs=base_model.get_layer('avg_pool').output)
+  model = Model(inputs=base_model.input, outputs=base_model.get_layer('dense').output)
   
 
   if image is not None:
@@ -58,6 +67,7 @@ def get_resnet50(image=None, dataset:Dataset=None):
     #Clear memory
     clear_session_keras()
     gc.collect()
+    del base_model
     del model
 
     return prediction.flatten()
@@ -87,5 +97,7 @@ def get_resnet50(image=None, dataset:Dataset=None):
   #Clear memory
   clear_session_keras()
   gc.collect()
+  del base_model
   del model
+
   return None

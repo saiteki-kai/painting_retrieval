@@ -2,8 +2,10 @@ import cv2 as cv
 import numpy as np
 from skimage.feature import local_binary_pattern
 from features_extraction import get_resnet50
-from ..painting.ccv import get_ccv
-from ..painting.utils import LIST_OF_FEATURES_IMPLEMENTED
+from ccv import get_ccv
+from utils import LIST_OF_FEATURES_IMPLEMENTED
+#from ..painting.ccv import get_ccv
+#from ..painting.utils import LIST_OF_FEATURES_IMPLEMENTED
 
 
 def compute_feature(img, feature):

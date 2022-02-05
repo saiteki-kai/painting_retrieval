@@ -3,47 +3,44 @@ import numpy as np
 from skimage.measure import ransac
 from skimage.transform import AffineTransform
 
-from src.painting.dataset import Dataset
-from src.painting.utils import STANDARD_FEATURES_SIZE
+from src.config import STANDARD_FEATURES_SIZE
+from src.painting.descriptor import compute_orb
+from src.painting.utils import load_features
 
 
 def compute_score(matches, n_inliers):
     return n_inliers / len(matches)
 
 
-def matching(kp1, des1, kp2, des2, T=0.75):
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-    matches = bf.match(des1, des2)
+def matching(kp1, des1, kp2, des2, threshold=0.75):
+    bf_matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf_matcher.match(des1, des2)
     matches = sorted(matches, key=lambda x: x.distance)
 
-    src_pts = np.float32([kp1[m.queryIdx].pt for m in matches]).reshape(-1, 2)
-    dst_pts = np.float32([kp2[m.trainIdx].pt for m in matches]).reshape(-1, 2)
+    src_pts = np.array([kp1[m.queryIdx].pt for m in matches], np.float32).reshape(-1, 2)
+    dst_pts = np.array([kp2[m.trainIdx].pt for m in matches], np.float32).reshape(-1, 2)
 
-    model, inliers = ransac((src_pts, dst_pts), AffineTransform, min_samples=4,
-                            residual_threshold=8, max_trials=100)  # 10000
+    _, inliers = ransac((src_pts, dst_pts), AffineTransform, min_samples=4,
+                        residual_threshold=8, max_trials=100)  # 10000
     n_inliers = np.sum(inliers)
+    score = compute_score(matches, n_inliers)
 
-    return compute_score(matches, n_inliers) > T
-
-
-def preprocess_orb():
-    ds = Dataset(DATASET_FOLDER, STANDARD_FEATURES_SIZE)
-    compute_descriptor(ds, '', (500,))
-    compute_descriptor(ds, '', (500, 32))
+    return score, score > threshold
 
 
-# preprocess_orb()
-
-def exact_matching():
-    query = cv2.imread('/home/lfx/Desktop/Painting Detection/Data/images/37.jpg')
-    query = cv2.resize(query, STANDARD_FEATURES_SIZE)
-    query_gray = cv2.cvtColor(query, cv2.COLOR_BGR2GRAY)
-    kp1, des1 = compute_orb(query_gray)
+def exact_matching(img):
+    img = cv2.resize(img, STANDARD_FEATURES_SIZE)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    kp1, des1 = compute_orb(gray)
 
     orb_kps = load_features('orb_kps')
     orb_desc = load_features('orb_desc')
     orb = zip(orb_kps, orb_desc)
 
-    for kp2, des2 in enumerate(orb):
-        if exact_matching(kp1, des1, kp2, des2, T=0.8):
-            print('An exact macth!!!!')
+    for i, (kp2, des2) in enumerate(orb):
+        score, match = matching(kp1, des1, kp2, des2, threshold=0.8)
+
+        if match:
+            return i, score
+
+    return None

@@ -9,6 +9,7 @@ from telegram.ext import Filters, MessageHandler, Updater, CallbackContext, Comm
 from src.bot.handlers.photo import photo_handler
 from src.bot.handlers.settings import set_feature_handler, set_similarity_handler, \
     set_results_handler, query_handler, get_settings_handler
+from src.config import DATA_FOLDER
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -37,7 +38,7 @@ def start_bot():
     bot = Bot(TOKEN)
     print("Bot started")
 
-    persistence = PicklePersistence(filename="botdata")
+    persistence = PicklePersistence(filename=os.path.join(DATA_FOLDER, "bot.data"))
 
     updater = Updater(TOKEN, persistence=persistence, use_context=True)
 

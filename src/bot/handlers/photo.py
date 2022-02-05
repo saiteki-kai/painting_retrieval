@@ -6,16 +6,11 @@ import cv2 as cv
 from telegram import InputMediaPhoto, Update
 from telegram.ext import CallbackContext
 
+# from src.painting.exact_matching import exact_matching
 from src.painting.retrieval import retrieve_images
-
-# TODO: add exact matching
 
 
 def photo_handler(update: Update, ctx: CallbackContext):
-    """Photo Handler
-
-    processes the original image and send back the result
-    """
     chat_id = update.effective_chat.id
 
     file = ctx.bot.getFile(update.message.photo[-1].file_id)
@@ -23,12 +18,22 @@ def photo_handler(update: Update, ctx: CallbackContext):
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=ext) as tmp:
         file.download(tmp.name)
+        img = cv.imread(tmp.name)
 
-        ctx.bot.sendMessage(chat_id, "Searching...")
+        update.message.reply_text("Matching...")
+
+        result = None # exact_matching(img)
+
+        if result is None:
+            update.message.reply_text("No matches found")
+        else:
+            _, score = result
+            update.message.reply_text(f"Found a match {score}")
+
+        update.message.reply_text("Searching...")
 
         start_time = time.perf_counter()
 
-        img = cv.imread(tmp.name)
         retrieved_img_paths, _, dists = retrieve_images(
             img,
             feature=ctx.chat_data["settings"]["feature"],

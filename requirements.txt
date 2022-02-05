@@ -70,6 +70,7 @@ tensorboard==2.7.0
 tensorboard-data-server==0.6.1
 tensorboard-plugin-wit==1.8.0
 tensorflow==2.7.0
+tensorflow-addons==0.15.0
 tensorflow-estimator==2.7.0
 tensorflow-io-gcs-filesystem==0.23.0
 termcolor==1.1.0
@@ -78,6 +79,7 @@ tifffile==2021.11.2
 toml==0.10.2
 tomli==1.2.3
 tornado==6.1
+typeguard==2.13.3
 typing_extensions==4.0.1
 tzdata==2021.5
 tzlocal==4.1

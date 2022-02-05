@@ -3,7 +3,7 @@ import os
 import cv2 as cv
 import pandas as pd
 
-from src.painting.utils import STANDARD_FEATURES_SIZE
+from src.config import STANDARD_FEATURES_SIZE
 
 
 class Dataset:

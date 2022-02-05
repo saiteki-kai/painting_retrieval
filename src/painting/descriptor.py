@@ -2,9 +2,9 @@ import cv2 as cv
 import numpy as np
 from skimage.feature import local_binary_pattern
 
+from src.config import LIST_OF_FEATURES_IMPLEMENTED
 from src.painting.ccv import get_ccv
 from src.painting.features_extraction import get_resnet50
-from src.painting.utils import LIST_OF_FEATURES_IMPLEMENTED
 
 
 def compute_feature(img, feature):
@@ -25,19 +25,19 @@ def compute_feature(img, feature):
         return compute_resnet50(img)
     elif feature == "ccv":
         return compute_ccv(img)
-    elif feature == "orb_desc":
-        return compute_orb(img)[1]
-    elif feature == "orb_kps":
-        return compute_orb(img)[0]
+    elif feature == "orb":
+        return compute_orb(img)
 
 
 def compute_orb(img, n_features=500):
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     orb = cv.ORB_create(nfeatures=n_features)
-    kp1, des1 = orb.detectAndCompute(gray, None)
-    kp1 = np.asarray(kp1)
-    des1 = np.asarray(des1)
-    return kp1, des1
+    kp, des = orb.detectAndCompute(gray, None)
+    kp = np.asarray(kp)
+    des = np.asarray(des)
+
+    print(kp.shape, des.shape)
+    return kp, des
 
 
 def compute_rgb_hist(img):

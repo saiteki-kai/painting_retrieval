@@ -1,12 +1,12 @@
 import cv2 as cv
 import numpy as np
 from skimage.feature import local_binary_pattern
-
+from features_extraction import get_resnet50
 from ..painting.ccv import get_ccv
 from ..painting.utils import LIST_OF_FEATURES_IMPLEMENTED
 
 
-def compute_feature(img, feature, vgg_level=None):
+def compute_feature(img, feature):
 
     if feature not in LIST_OF_FEATURES_IMPLEMENTED:
         raise ValueError(f"unrecognized feature: '{feature}'")
@@ -21,11 +21,7 @@ def compute_feature(img, feature, vgg_level=None):
         return compute_hog(img)
     elif feature == "dct":
         return compute_dct(img)
-    elif feature == "vgg":
-        from features_extraction import get_vgg
-        return compute_vgg(img, vgg_level)
     elif feature == "resnet50":
-        from features_extraction import get_resnet50
         return compute_resnet50(img)
     elif feature == "ccv":
         return compute_ccv(img)
@@ -103,10 +99,6 @@ def compute_dct(img):
     dct = np.uint8(dct * 255)
 
     return dct
-
-
-def compute_vgg(dataset, vgg_level):
-    return get_vgg(dataset=dataset, cut_level=vgg_level)
 
 
 def compute_resnet50(dataset):

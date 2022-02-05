@@ -150,7 +150,7 @@ cython_debug/
 out/
 
 #Test files
-painting/test.py 
+src/painting/test.py 
 a.txt
 
 data/detection/

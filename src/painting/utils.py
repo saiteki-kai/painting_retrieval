@@ -22,7 +22,6 @@ LIST_OF_FEATURES_IMPLEMENTED = [
     "lbp",
     "hog",
     "dct",
-    "vgg",
     "resnet50",
     "ccv",
     "orb_desc",

@@ -12,14 +12,11 @@ from ..painting.utils import (DATASET_FOLDER, FEATURES_FOLDER,
                               STANDARD_FEATURES_SIZE)
 
 
-def compute_descriptor(dataset: Dataset, descriptor_name, vgg_level=1):
+def compute_descriptor(dataset: Dataset, descriptor_name):
     """
     :param dataset: Dataset instance
     :param descriptor_name: the feature to compute for each image
     """
-    if descriptor_name == "vgg":
-        compute_feature(dataset, descriptor_name, vgg_level=vgg_level)
-        return
 
     if descriptor_name == 'resnet50':
         compute_feature(dataset, descriptor_name)
@@ -52,20 +49,15 @@ if __name__ == "__main__":
     ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
 
     # We avoit to do ccv for now (too slow)
-    avoid_list = ['ccv', 'vgg', 'resnet50']
+    avoid_list = ['ccv', 'resnet50']
     list_of_features = [x for x in LIST_OF_FEATURES_IMPLEMENTED if (x not in avoid_list )]
 
     for feature in list_of_features:
         print("Computing: " + feature)
         compute_descriptor(ds, feature)
 
-    # VGG features are special for now, we want to be able to specify the level
-    # Once a level is fixed we can modify it and it will be the same of
-    # the others
+    # We want to comupute resnet now to observ better the results.
     ds = Dataset(DATASET_FOLDER, (224, 224))
-
-    print("Computing: vgg")
-    compute_descriptor(ds, "vgg", vgg_level=3)
 
     print("Computing: resnet50")
     compute_descriptor(ds, "resnet50")

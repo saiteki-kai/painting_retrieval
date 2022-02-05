@@ -36,11 +36,7 @@ class ImageRetrieval:
         else:
             query_img = query
 
-        if self.feature == "vgg":
-            from features_extraction import get_vgg
-
-            q = get_vgg(image=query_img, cut_level=3)
-        elif self.feature == "resnet50":
+        if self.feature == "resnet50":
             from features_extraction import get_resnet50
 
             q = get_resnet50(image=query_img)
@@ -66,11 +62,7 @@ class ImageRetrieval:
         # query representation
         query_img = self.dataset.get_image_by_index(query_id)
 
-        if self.feature == "vgg":
-            from features_extraction import get_vgg
-
-            q = get_vgg(image=query_img, cut_level=3)
-        elif self.feature == "resnet50":
+        if self.feature == "resnet50":
             from features_extraction import get_resnet50
 
             q = get_resnet50(image=query_img)

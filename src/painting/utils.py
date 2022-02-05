@@ -1,11 +1,8 @@
-import glob
-import json
 import os
 
 import cv2 as cv
 import joblib
 import matplotlib.pyplot as plt
-import numpy as np
 
 DATA_FOLDER = os.path.join(os.getcwd(), "data")
 DATASET_FOLDER = os.path.join(os.getcwd(), "data", "raw", "dataset")
@@ -41,6 +38,7 @@ def load_features(feature):
 
     return joblib.load(filepath, mmap_mode="r+")
 
+
 def plot_image(image):
     fig, axes = plt.subplots()
 
@@ -60,4 +58,3 @@ def plot_image(image):
 if __name__ == "__main__":
     F = load_features("rgb_hist")
     print(F.shape)
-

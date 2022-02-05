@@ -1,11 +1,9 @@
 import os
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 import skimage.exposure as exposure
 from medpy.filter.smoothing import anisotropic_diffusion
-from scipy import ndimage as ndi
 from skimage.morphology import convex_hull_image
 
 

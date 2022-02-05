@@ -5,14 +5,13 @@ from time import perf_counter
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy
-import pandas as pd
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
-from ..painting.dataset import Dataset
-from ..painting.descriptor import compute_feature
-from ..painting.evalutation_metrics import *
-from ..painting.utils import (
+from src.painting import evalutation_metrics
+from src.painting.dataset import Dataset
+from src.painting.descriptor import compute_feature
+from src.painting.utils import (
     DATASET_FOLDER,
     FEATURES_FOLDER,
     OUTPUT_FOLDER,
@@ -116,7 +115,7 @@ class ImageRetrieval:
             pickle.dump(NN, index)
 
     def plot_similar_results(
-        self, query_idx, doc_indexes, distances=None, n_results=5, save=False
+            self, query_idx, doc_indexes, distances=None, n_results=5, save=False
     ):
         fig, axes = plt.subplots(2, n_results)
 
@@ -145,7 +144,7 @@ class ImageRetrieval:
             plt.show()
 
     def evaluate_query(
-        self, query_id, relevant_ids, metrics, similarity="euclidean", n_results=5
+            self, query_id, relevant_ids, metrics, similarity="euclidean", n_results=5
     ):
         retrieved_ids, _, _ = self.search(query_id, similarity, n_results)
 
@@ -160,7 +159,7 @@ class ImageRetrieval:
         return results
 
     def evaluate_queries(
-        self, query_ids, relevant_ids, metrics, similarity="euclidean", n_results=5
+            self, query_ids, relevant_ids, metrics, similarity="euclidean", n_results=5
     ):
         results = []
 
@@ -173,7 +172,7 @@ class ImageRetrieval:
         return results
 
 
-def retrieve_images(img, feature, similarity="euclidean", n_features=5):
+def retrieve_images(img, feature, similarity="euclidean", n_results=5):
     ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
 
     # MATCHING
@@ -181,7 +180,7 @@ def retrieve_images(img, feature, similarity="euclidean", n_features=5):
 
     ir = ImageRetrieval(feature, ds)
 
-    ids, dists, time = ir.search(img, similarity, n_features)
+    ids, dists, time = ir.search(img, similarity, n_results)
     print("Search Time with index: ", time)
 
     return [ds.get_image_filepath(idx) for idx in ids], time, dists

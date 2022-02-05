@@ -1,48 +1,33 @@
+import logging
 import os
-import tempfile
-import time
 
-import cv2 as cv
 from dotenv import load_dotenv
-from telegram import Bot, InputMediaPhoto
-from telegram.ext import Updater, Filters, MessageHandler
+from telegram import Bot, Update
+from telegram.ext import Filters, MessageHandler, Updater, CallbackContext, CommandHandler, \
+    CallbackQueryHandler, PicklePersistence
 
-from ..painting.dataset import Dataset
-from ..painting.retrieval import retrieve_images
-from ..painting.utils import DATASET_FOLDER, STANDARD_FEATURES_SIZE
+from src.bot.handlers.photo import photo_handler
+from src.bot.handlers.settings import set_feature_handler, set_similarity_handler, \
+    set_results_handler, query_handler, get_settings_handler
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 
-def photo_handler(update, ctx):
-    """Photo Handler
+def start_handler(update: Update, ctx: CallbackContext):
+    # initialize chatbot data
+    ctx.chat_data["settings"] = {
+        "feature": "rgb_hist",
+        "similarity": "euclidean",
+        "results": 5,
+    }
 
-    processes the original image and send back the result
-    """
-    chat_id = update.effective_chat.id
+    update.message.reply_text("Welcome")
 
-    file = ctx.bot.getFile(update.message.photo[-1].file_id)
-    _, ext = os.path.splitext(file.file_path)
 
-    with tempfile.NamedTemporaryFile(mode="w", suffix=ext) as tmp:
-        file.download(tmp.name)
-
-        ctx.bot.sendMessage(chat_id, "Hi, please wait until the image is ready")
-
-        start_time = time.perf_counter()
-
-        img = cv.imread(tmp.name)
-        retrieved_img_paths, retrieve_time, dists = retrieve_images(img, "rgb_hist")
-
-        elapsed = time.perf_counter() - start_time
-
-        caption = f"The execution took {elapsed:.3f} seconds"
-
-        images = []
-        for i, f in enumerate(retrieved_img_paths):
-            with open(f, "rb") as img:
-                images.append(InputMediaPhoto(img, caption=f"Image: {i + 1}, Distance: {dists[i]}"))
-
-        ctx.bot.sendMediaGroup(chat_id, images)
-        ctx.bot.sendMessage(chat_id, caption)
+def error_callback(update: Update, ctx: CallbackContext):
+    logging.warning('Update "%s" caused error "%s"', update, ctx.error)
 
 
 def start_bot():
@@ -50,10 +35,20 @@ def start_bot():
     TOKEN = os.getenv("TOKEN")
 
     bot = Bot(TOKEN)
-
     print("Bot started")
 
-    updater = Updater(TOKEN)
+    persistence = PicklePersistence(filename="botdata")
+
+    updater = Updater(TOKEN, persistence=persistence, use_context=True)
+
     updater.dispatcher.add_handler(MessageHandler(Filters.photo, photo_handler))
+    updater.dispatcher.add_handler(CommandHandler("start", start_handler))
+    updater.dispatcher.add_handler(CommandHandler("set_feature", set_feature_handler))
+    updater.dispatcher.add_handler(CommandHandler("set_results", set_results_handler))
+    updater.dispatcher.add_handler(CommandHandler("set_similarity", set_similarity_handler))
+    updater.dispatcher.add_handler(CommandHandler("get_settings", get_settings_handler))
+    updater.dispatcher.add_handler(CallbackQueryHandler(query_handler))
+    updater.dispatcher.add_error_handler(error_callback)
+
     updater.start_polling()
     updater.idle()

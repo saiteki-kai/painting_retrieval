@@ -1,38 +1,38 @@
-import os
-
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 from skimage.measure import ransac
-from skimage.transform import AffineTransform, ProjectiveTransform
+from skimage.transform import AffineTransform
 
-from ..painting.dataset import Dataset
-from ..painting.utils import (FEATURES_FOLDER, STANDARD_FEATURES_SIZE,
-                              TRAIN_FOLDER)
+from src.painting.dataset import Dataset
+from src.painting.utils import STANDARD_FEATURES_SIZE
 
 
 def compute_score(matches, n_inliers):
-    return (n_inliers/len(matches))
+    return n_inliers / len(matches)
+
 
 def matching(kp1, des1, kp2, des2, T=0.75):
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck = True)
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = bf.match(des1, des2)
-    matches = sorted(matches, key = lambda x : x.distance)
+    matches = sorted(matches, key=lambda x: x.distance)
 
-    src_pts = np.float32([kp1[m.queryIdx].pt for m in matches]).reshape(-1,2)
-    dst_pts = np.float32([kp2[m.trainIdx].pt for m in matches]).reshape(-1,2)
+    src_pts = np.float32([kp1[m.queryIdx].pt for m in matches]).reshape(-1, 2)
+    dst_pts = np.float32([kp2[m.trainIdx].pt for m in matches]).reshape(-1, 2)
 
-    model, inliers = ransac((src_pts, dst_pts), AffineTransform, min_samples=4, residual_threshold=8, max_trials=100) #10000
+    model, inliers = ransac((src_pts, dst_pts), AffineTransform, min_samples=4,
+                            residual_threshold=8, max_trials=100)  # 10000
     n_inliers = np.sum(inliers)
 
     return compute_score(matches, n_inliers) > T
 
+
 def preprocess_orb():
     ds = Dataset(DATASET_FOLDER, STANDARD_FEATURES_SIZE)
-    compute_descriptor(ds, '', (500, ))
+    compute_descriptor(ds, '', (500,))
     compute_descriptor(ds, '', (500, 32))
 
-#preprocess_orb()
+
+# preprocess_orb()
 
 def exact_matching():
     query = cv2.imread('/home/lfx/Desktop/Painting Detection/Data/images/37.jpg')
@@ -47,4 +47,3 @@ def exact_matching():
     for kp2, des2 in enumerate(orb):
         if exact_matching(kp1, des1, kp2, des2, T=0.8):
             print('An exact macth!!!!')
-

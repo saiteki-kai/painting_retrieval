@@ -1,15 +1,12 @@
 import os
 
-import cv2 as cv
 import numpy as np
-import pandas as pd
 from joblib import Parallel, delayed, dump, load
 
-from ..painting.dataset import Dataset
-from ..painting.descriptor import compute_feature
-from ..painting.utils import (DATASET_FOLDER, FEATURES_FOLDER,
-                              LIST_OF_FEATURES_IMPLEMENTED,
-                              STANDARD_FEATURES_SIZE)
+from src.painting.dataset import Dataset
+from src.painting.descriptor import compute_feature
+from src.painting.utils import DATASET_FOLDER, FEATURES_FOLDER, LIST_OF_FEATURES_IMPLEMENTED, \
+    STANDARD_FEATURES_SIZE
 
 
 def compute_descriptor(dataset: Dataset, descriptor_name, vgg_level=1):
@@ -53,7 +50,7 @@ if __name__ == "__main__":
 
     # We avoit to do ccv for now (too slow)
     avoid_list = ['ccv', 'vgg', 'resnet50']
-    list_of_features = [x for x in LIST_OF_FEATURES_IMPLEMENTED if (x not in avoid_list )]
+    list_of_features = [x for x in LIST_OF_FEATURES_IMPLEMENTED if (x not in avoid_list)]
 
     for feature in list_of_features:
         print("Computing: " + feature)

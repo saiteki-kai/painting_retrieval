@@ -1,24 +1,24 @@
 import os
-import glob
+
 import cv2 as cv
 import pandas as pd
 
-from ..painting.utils import STANDARD_FEATURES_SIZE
+from src.painting.utils import STANDARD_FEATURES_SIZE
 
 
 class Dataset:
     def __init__(
-        self,
-        folder,
-        image_size=STANDARD_FEATURES_SIZE,
-        custom_read_image=None,
-        testonly=False,
+            self,
+            folder,
+            image_size=STANDARD_FEATURES_SIZE,
+            custom_read_image=None,
+            test_only=False,
     ):
         self._folder = folder
-        self._testonly = testonly
+        self._test_only = test_only
         self._data = pd.read_pickle(os.path.join(folder, "data_info.pkl"))
 
-        if self._testonly:
+        if self._test_only:
             self._data = self._data.loc[~self._data["in_train"]]
             self._prev_test_index = self._data.loc[~self._data["in_train"]].index
             self._data.reset_index(drop=True, inplace=True)
@@ -67,7 +67,7 @@ class Dataset:
 
     def get_image_filename(self, index):
         return self._data["filename"][index]
-    
+
     def get_image_filepath(self, index):
         return self._get_image_path(self._data["filename"][index])
 

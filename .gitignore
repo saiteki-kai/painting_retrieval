@@ -153,7 +153,7 @@ a.txt
 test.py 
 
 data/bot.data
-data/detection/
+data/segmentation/
 data/features/
 data/raw/retrieval/
 data/raw/dataset/**

@@ -1,16 +1,18 @@
-import gc
 import os
 
 import cv2 as cv
 import numpy as np
 from PIL import Image
 from keras.applications.resnet import preprocess_input as preprocess_input_resnet
-# should clear keras models
+
+# Clear keras memory
 from keras.backend import clear_session as clear_session_keras
+import gc
+
 from keras.models import load_model
 from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing import image as image_f
-
+import tensorflow_addons as tfa #Used in saved_model (don't delete)
 from src.config import FEATURES_FOLDER, MODEL_FOLDER
 from src.painting.dataset import Dataset
 

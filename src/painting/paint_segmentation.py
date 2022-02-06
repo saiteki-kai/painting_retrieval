@@ -255,14 +255,6 @@ def paint_segmentation_pipeline(image, model=None):
     else:
         _, mask = hough_based_segmentation(image)
 
-    # centroid of my mask
-    x,y,w,h = cv2.boundingRect(mask)
-    centroid = (x+round(w/2), y+round(h/2))
-
-    """show_centroid = cv2.circle(image, centroid, 15, (255, 0, 0), 5)
-    plt.imshow(show_centroid)
-    plt.show()"""
-
     # morphology operations
     kernel = np.ones((3, 3), np.uint8)
     dilate = cv2.dilate(mask, kernel, iterations = 15)
@@ -276,6 +268,14 @@ def paint_segmentation_pipeline(image, model=None):
     # convex hull
     convex_hull = convex_hull_image(mask).astype(np.uint8)
     cv2.imwrite(os.path.join(OUTPUT_FOLDER, '9_convex_hull.png'), convex_hull * 255)
+
+    # centroid of my mask edited with morphological operations and convexhull
+    x,y,w,h = cv2.boundingRect(convex_hull)
+    centroid = (x+round(w/2), y+round(h/2))
+
+    """show_centroid = cv2.circle(image, centroid, 15, (255, 0, 0), 5)
+    plt.imshow(show_centroid)
+    plt.show()"""
 
     # edge detection
     (T, _) = cv2.threshold(convex_hull, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
@@ -305,8 +305,10 @@ def paint_segmentation_pipeline(image, model=None):
     corners_points, corners_image = harris_corner_detection(min_dist_bw_label)
     cv2.imwrite(os.path.join(OUTPUT_FOLDER, '15_harris.png'), corners_image)
 
-    if len(corners_points) != 4:
+    if len(corners_points) == 4:
+        x,y,w,h = cv2.boundingRect(min_dist_bw_label)
         not_unwarped = cv2.bitwise_and(image, image, mask=min_dist_bw_label)
+        not_unwarped = not_unwarped[y:y+h, x:x+w]
         cv2.imwrite(os.path.join(OUTPUT_FOLDER, 'not_un_warped.jpg'), not_unwarped)
         return not_unwarped
     else:

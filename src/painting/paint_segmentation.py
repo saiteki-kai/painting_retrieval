@@ -1,56 +1,19 @@
 import os
-
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 import skimage.exposure as exposure
 from medpy.filter.smoothing import anisotropic_diffusion
 from skimage.morphology import convex_hull_image
 
+from src.config import MODEL_FOLDER, OUTPUT_FOLDER
 
-def resize_with_max_ratio(image, max_h, max_w):
-    if len(image.shape) > 2:
-        w, h, ch = image.shape
-    else:
-        w, h = image.shape
+from tensorflow import keras
+from tensorflow.keras.preprocessing.image import img_to_array
+import segmentation_models as sm
 
-    if (h > max_h) or (w > max_w):
-        rate = max_h / h
-        rate_w = w * rate
-        if rate_w > max_h:
-            rate = max_h / w
-        image = cv2.resize(
-            image, (int(h * rate), int(w * rate)), interpolation=cv2.INTER_CUBIC
-        )
-    return image
-
-
-def load_images_from_folder(folder):
-    filenames = os.listdir(folder)
-
-    images = []
-    for filename in filenames:
-        image = cv2.imread(os.path.join(folder, filename))
-        if image is not None:
-            images.append(image)
-    return images
-
-
-def load_images_and_gt_from_folder(folder):
-    images_path = os.path.join(folder, 'images')
-    gt_path = os.path.join(folder, 'masks')
-    filenames1 = os.listdir(gt_path)
-
-    images = []
-    masks = []
-    for i in range(len(filenames1)):
-        image = cv2.imread(os.path.join(images_path, filenames1[i]).replace('.png', '.jpg'))
-        mask = cv2.imread(os.path.join(gt_path, filenames1[i]))
-        if image is not None:
-            images.append(image)
-        if mask is not None:
-            masks.append(mask)
-    return images, masks
-
+BACKBONE = 'resnet34'
+preprocess_input = sm.get_preprocessing('resnet34')
 
 def sobel(gray, ksize):
     # apply sobel derivatives
@@ -58,43 +21,40 @@ def sobel(gray, ksize):
     sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=ksize)
 
     # optionally normalize to range 0 to 255 for proper display
-    sobelx_norm = exposure.rescale_intensity(sobelx, in_range='image', out_range=(0, 255)).clip(0,
-                                                                                                255).astype(
-        np.uint8)
-    sobely_norm = exposure.rescale_intensity(sobelx, in_range='image', out_range=(0, 255)).clip(0,
-                                                                                                255).astype(
-        np.uint8)
+    sobelx_norm = exposure.rescale_intensity(sobelx, in_range='image', out_range=(0, 255)) \
+        .clip(0, 255).astype(np.uint8)
+    sobely_norm = exposure.rescale_intensity(sobelx, in_range='image', out_range=(0, 255)) \
+        .clip(0, 255).astype(np.uint8)
 
-    # square 
+    # square
     sobelx2 = cv2.multiply(sobelx, sobelx)
     sobely2 = cv2.multiply(sobely, sobely)
 
-    # add together and take square root
-    # sobel_magnitude = cv2.sqrt(sobelx2 + sobely2)
-
     # normalize to range 0 to 255 and clip negatives
-    sobelx2 = exposure.rescale_intensity(sobelx2, in_range='image', out_range=(0, 255)).clip(0,
-                                                                                             255).astype(
-        np.uint8)
-    sobely2 = exposure.rescale_intensity(sobely2, in_range='image', out_range=(0, 255)).clip(0,
-                                                                                             255).astype(
-        np.uint8)
-    return sobelx2, sobely2
+    sobelx2 = exposure.rescale_intensity(sobelx2, in_range='image', out_range=(0, 255)) \
+        .clip(0,255).astype(np.uint8)
+    sobely2 = exposure.rescale_intensity(sobely2, in_range='image', out_range=(0, 255)) \
+        .clip(0,255).astype(np.uint8)
 
+    # add together and take square root
+    sobel_magnitude = cv2.sqrt(sobelx2 + sobely2)
+    sobel_magnitude = exposure.rescale_intensity(sobel_magnitude, in_range='image', out_range=(0, 255)) \
+        .clip(0,255).astype(np.uint8)
 
-def sobel_operator(gray):
-    sobel_x = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+    return sobelx2, sobely2, sobel_magnitude
+
+def sobel_operator(gray, ksize=3):
+    sobel_x = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=ksize)
     out_x = np.clip(sobel_x, 0, 255).astype(np.uint8)
     mean = np.mean(sobel_x)
     out_x[out_x <= mean] = 0
 
-    sobel_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+    sobel_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=ksize)
     out_y = np.clip(sobel_y, 0, 255).astype(np.uint8)
     mean = np.mean(sobel_y)
     out_y[out_y <= mean] = 0
 
     return out_x, out_y
-
 
 def fillhole(input_image):
     '''
@@ -112,7 +72,6 @@ def fillhole(input_image):
     img_out = input_image | im_flood_fill_inv
     return img_out
 
-
 def hough_transform(image, rho=1, theta=np.pi / 180, threshold=30):
     '''
     parameters:
@@ -121,7 +80,6 @@ def hough_transform(image, rho=1, theta=np.pi / 180, threshold=30):
     @threshold: Only lines that are greater than threshold will be returned.
     '''
     return cv2.HoughLines(image, rho=rho, theta=theta, threshold=threshold)
-
 
 def draw_lines(image, lines, color=[255, 0, 0], thickness=2):
     for line in lines:
@@ -137,13 +95,12 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2):
             b = np.sin(theta)
             x0 = a * rho
             y0 = b * rho
-            x1 = int(x0 + 10000 * (-b))
-            y1 = int(y0 + 10000 * (a))
-            x2 = int(x0 - 10000 * (-b))
-            y2 = int(y0 - 10000 * (a))
+            x1 = int(x0 + 100000 * (-b))
+            y1 = int(y0 + 100000 * (a))
+            x2 = int(x0 - 100000 * (-b))
+            y2 = int(y0 - 100000 * (a))
             cv2.line(image, (x1, y1), (x2, y2), color, thickness)
     return image
-
 
 def harris_corner_detection(image, T=50):
     dst = cv2.cornerHarris(image, 2, 5, 0.04)
@@ -174,7 +131,6 @@ def harris_corner_detection(image, T=50):
 
     return coordinates_tuples, empty
 
-
 def get_destination_points(corners):
     w1 = np.sqrt((corners[0][0] - corners[1][0]) ** 2 + (corners[0][1] - corners[1][1]) ** 2)
     w2 = np.sqrt((corners[2][0] - corners[3][0]) ** 2 + (corners[2][1] - corners[3][1]) ** 2)
@@ -193,7 +149,6 @@ def get_destination_points(corners):
 
     print('\nThe approximated height and width of the original image is: \n', (h, w))
     return destination_corners, h, w
-
 
 def warp_image(img, src):
     (tl, tr, br, bl) = src
@@ -220,20 +175,18 @@ def warp_image(img, src):
     return warp
 
 
-def hough_based_method(image):
-    # tuning parametri filtro anisotropico! (parametri paper)
-    # tuning parametri di hough!
+def hough_based_segmentation(image):
 
     # grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # denoise
-    blur = anisotropic_diffusion(gray, kappa=30, gamma=0.25, option=1, niter=10).astype(np.uint8)
+    blur = anisotropic_diffusion(gray, kappa=30, gamma=0.25, option=1, niter=10).astype(np.uint8) # parametri paper
 
     # edge detection
     sx, sy = sobel_operator(blur)
 
-    # hough transform
+    # hough transform (tuning parametri di hough da fare)
     h_lines = hough_transform(sx, threshold=200)
     v_lines = hough_transform(sy, threshold=200)
 
@@ -241,44 +194,81 @@ def hough_based_method(image):
     out = draw_lines(out, v_lines, color=255, thickness=3)
     return out
 
+def cnn_based_segmentation(image, model):
+    x = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    x = cv2.resize(x, (224, 224))
+    x = img_to_array(x) / 255.0
+    x = preprocess_input(x)
+    x = np.expand_dims(x, axis=0)
+    pred = model.predict(x, batch_size=1)
+    mask = (pred.squeeze() >= 0.5).astype(np.uint8)
+    mask = cv2.resize(mask, image.shape[:2])
+    masked = cv2.bitwise_and(image, image, mask=mask)
+    return masked, mask
 
-def paint_segmentation_pipeline(image):
+def paint_segmentation_pipeline(image, model=None):
+
     # paint segmentation (hough based or semantic segmentation)
-    # ...
-    # mask, segmented = semantic_segmentation(image)
-    mask = None
+    if model:
+        masked, mask = cnn_based_segmentation(image, model)
+    else:
+        masked, mask = hough_based_segmentation(image)
+
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '1_rgb.jpg'), image)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '2_mask.png'), mask * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '3_masked.png'), masked)
 
     # morphology operations
-    # ...
-    """
-    kernel = np.ones((5,5),np.uint8)
-    dilation = cv2.dilate(edges,kernel,iterations = 15)
-    erosion = cv2.dilate(edges,kernel,iterations = 15)
-    """
+    kernel = np.ones((3, 3), np.uint8)
+    dilate = cv2.dilate(mask, kernel, iterations = 15)
+    erode = cv2.erode(dilate, kernel, iterations = 15)
+    fillholes = (fillhole(erode) > 0).astype(np.uint8)
+
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '4_dilate.png'), dilate * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '5_erode.png'), erode * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '6_fillholes.png'), fillholes * 255)
 
     # convex hull
     convex_hull = convex_hull_image(mask).astype(np.uint8)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '7_convex_hull.png'), convex_hull * 255)
 
     # edge detection
     (T, _) = cv2.threshold(convex_hull, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
-    edges = cv2.Canny(convex_hull, T * 0.5, T)
+    canny = cv2.Canny(convex_hull, T * 0.5, T)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '8_canny.png'), canny)
 
     # hough transform
-    hough_lines = hough_transform(edges, threshold=100)
-    out = draw_lines(mask, hough_lines, color=255, thickness=3)
+    hough_lines = hough_transform(canny, threshold=100)
+    hough_out = draw_lines(np.zeros(mask.shape), hough_lines, color=255, thickness=3)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '9_hough.png'), hough_out * 255)
 
-    # labeling of the connected components
-    nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(out, connectivity=4)
-    max_label, max_size = max([(i, stats[i, cv2.CC_STAT_AREA]) for i in range(1, nb_components)],
-                              key=lambda x: x[
-                                  1])  # Note: range() starts from 1 since 0 is the background label.
-    out = (out == max_label).astype(np.uint8)
+    # invert hough mask
+    invert_hough = 255 - hough_out
+    invert_hough = (invert_hough > 0).astype(np.uint8)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '10_invert_hough.png'), invert_hough * 255)
+
+    # labeling of the connected components [Note: range() starts from 1 since 0 is the background label.]
+    nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(invert_hough, connectivity=4)
+
+    # Create false color image
+    colors = np.random.randint(0, 255, size=(nb_components , 3), dtype=np.uint8)
+    colors[0] = [0, 0, 0]  # for cosmetic reason we want the background black
+    false_colors = colors[output]
+
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '11_labeling_connected_components.png'), false_colors)
+
+    max_label, max_size = max([(i, stats[i, cv2.CC_STAT_AREA]) for i in range(1, nb_components)], key=lambda x: x[1])
+    max_bw_label = (output == max_label).astype(np.uint8)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '12_max_bw_label.png'), max_bw_label * 255)
 
     # harris corner detection
-    corners_points, corners_image = harris_corner_detection(out)
+    corners_points, corners_image = harris_corner_detection(max_bw_label)
     src = np.array([[point[1], point[0]] for point in corners_points], dtype="float32")
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '13_harris.png'), corners_image)
 
     # image distortion correction
-    un_warped = warp_image(out, src)
+    un_warped = warp_image(masked, src)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '14_un_warped.jpg'), un_warped)
 
     return un_warped
+

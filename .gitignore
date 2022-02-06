@@ -152,6 +152,8 @@ src/painting/test.py
 a.txt
 test.py 
 
+out/results/**
+
 data/bot.data
 data/segmentation/
 data/features/

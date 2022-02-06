@@ -161,6 +161,6 @@ data/raw/dataset/**
 !/data/raw/dataset/data_info.csv
 
 model/**
-!/model/resnet_finetuing_model.zip
+!/model/resnet_model.zip
 !/model/model_info.txt
 

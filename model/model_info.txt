@@ -1,13 +1,20 @@
 
-model_name: 
+model_name: resnet_256_5
+n_neurons: 256, dropout: 0.5, epochs: 20, acc_test: 45.65%, link:
+https://www.kaggle.com/davidepietrasanta/notebookce6da9f532?scriptVersionId=87144163
+
+model_name: resnet_512_5
+n_neurons: 512, dropout: 0.5, epochs: 20, acc_test: 47.09, link:
+https://www.kaggle.com/davidepietrasanta/notebookce6da9f532?scriptVersionId=87137169
+
+model_name: resnet_1024_5
 n_neurons: 1024, dropout: 0.5, epochs: 20, acc_test: 49.14%, link:
 https://www.kaggle.com/davidepietrasanta/notebookce6da9f532?scriptVersionId=86993592
-
-model_name: resnet_model
-n_neurons: 256, dropout: 0.5, epochs: 20, acc_test: 49.14%, link:
-https://www.kaggle.com/davidepietrasanta/notebookce6da9f532?scriptVersionId=86986889
 
 model: resnet_hps, resnet_tuned
 n_neurons: 512, dropout: 0.2, epochs: 50(best 3), link:
 https://www.kaggle.com/davidepietrasanta/resnet-tuning?scriptVersionId=87065318
+n_neurons: 512, dropout: 0.2, epochs: 20, acc_test: 46.42%, link:
+https://www.kaggle.com/davidepietrasanta/notebookce6da9f532?scriptVersionId=87124451
+
 

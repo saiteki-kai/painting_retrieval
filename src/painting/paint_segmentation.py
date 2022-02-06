@@ -15,6 +15,8 @@ import segmentation_models as sm
 BACKBONE = 'resnet34'
 preprocess_input = sm.get_preprocessing('resnet34')
 
+
+
 def sobel(gray, ksize):
     # apply sobel derivatives
     sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=ksize)
@@ -79,6 +81,7 @@ def false_colors(image, nb_components):
     #colors[0] = [207, 59, 0]
     return colors[image]
 
+
 def hough_transform(image, rho=1, theta=np.pi / 180, threshold=30):
     '''
     parameters:
@@ -110,6 +113,7 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2):
             cv2.line(image, (x1, y1), (x2, y2), color, thickness)
     return image
 
+
 def harris_corner_detection(image, T=50):
     corners_points = []
     corners_image = np.zeros_like(image)
@@ -127,27 +131,32 @@ def harris_corner_detection(image, T=50):
     euclidian_dist = lambda pt1, pt2 : np.sqrt((pt2[1] - pt1[1]) ** 2 + (pt2[0] - pt1[0]) ** 2)
 
     # filter the points
-    pts = [p for i in range(len(pts)) for p in pts[i::1] if (euclidian_dist(pts[i], p) >= T)]
+    #pts = [p for i in range(1, len(pts)) for p in pts[i::1] if (euclidian_dist(pts[i], p) >= T)]
+
+    pts_copy = pts
+    i = 1
+    for pt1 in pts:
+        for pt2 in pts[i::1]:
+            if (euclidian_dist(pt1, pt2) < T):
+                pts_copy.remove(pt2)
+        i += 1
+    print(len(pts_copy))
 
     # if the points are not 4 we return zero points!
-    if len(pts) == 4:
+    if len(pts_copy) == 4:
 
         # sort coordinates_tuples (tl, tr, bl, br)
         [h, w] = image.shape
-        tl_dist = [euclidian_dist(pts[i], (0, 0)) for i in range(pts)]
-        tr_dist = [euclidian_dist(pts[i], (0, w)) for i in range(pts)]
-        bl_dist = [euclidian_dist(pts[i], (h, 0)) for i in range(pts)]
-        br_dist = [euclidian_dist(pts[i], (h, w)) for i in range(pts)]
-        corners_points = [pts[np.asarray(tl_dist).argmin()], \
-                            pts[np.asarray(tr_dist).argmin()], \
-                            pts[np.asarray(bl_dist).argmin()], \
-                            pts[np.asarray(br_dist).argmin()]]
+        tl_index = np.asarray([euclidian_dist(pt, (0, 0)) for pt in pts_copy]).argmin()
+        tr_index = np.asarray([euclidian_dist(pt, (0, w)) for pt in pts_copy]).argmin()
+        bl_index = np.asarray([euclidian_dist(pt, (h, 0)) for pt in pts_copy]).argmin()
+        br_index = np.asarray([euclidian_dist(pt, (h, w)) for pt in pts_copy]).argmin()
+        corners_points = np.asarray([pts_copy[tl_index], pts_copy[tr_index], pts_copy[br_index], pts_copy[bl_index]])
 
         for pt in corners_points:
             cv2.circle(corners_image, tuple(reversed(pt)), 10, 255, -1)
 
     return corners_points, corners_image
-
 
 def get_destination_points(corners):
     w1 = np.sqrt((corners[0][0] - corners[1][0]) ** 2 + (corners[0][1] - corners[1][1]) ** 2)
@@ -235,7 +244,8 @@ def cnn_based_segmentation(image, model):
     cv2.imwrite(os.path.join(OUTPUT_FOLDER, '3_labeling_connected_components.png'), false_colors(output, nb_components))
     cv2.imwrite(os.path.join(OUTPUT_FOLDER, '4_max_bw_label.png'), max_bw_label * 255)
     cv2.imwrite(os.path.join(OUTPUT_FOLDER, '5_masked.png'), masked)
-    return masked, mask
+    return masked, max_bw_label
+
 
 def paint_segmentation_pipeline(image, model=None):
 
@@ -293,22 +303,21 @@ def paint_segmentation_pipeline(image, model=None):
 
     # harris corner detection
     corners_points, corners_image = harris_corner_detection(min_dist_bw_label)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '15_harris.png'), corners_image)
+
     if len(corners_points) != 4:
         not_unwarped = cv2.bitwise_and(image, image, mask=min_dist_bw_label)
         cv2.imwrite(os.path.join(OUTPUT_FOLDER, 'not_un_warped.jpg'), not_unwarped)
         return not_unwarped
     else:
-        #src = np.array([[point[1], point[0]] for point in corners_points], dtype="float32")
-        cv2.imwrite(os.path.join(OUTPUT_FOLDER, '15_harris.png'), corners_image)
-
         # se harris non ritorna 4 punti allora la segmentazione viene fatta senza unwarping!
         # harris ritorna in un ordine strano i punti! devo ordinarli!
-        plt.imshow(corners_image)
-        plt.title(corners_points)
-        plt.show()
+
+        # invert points coordinates
+        src = np.array([[point[1], point[0]] for point in corners_points], dtype="float32")
 
         # image distortion correction
-        un_warped = warp_image(image, corners_points)
+        un_warped = warp_image(image, src)
         cv2.imwrite(os.path.join(OUTPUT_FOLDER, 'un_warped.jpg'), un_warped)
         return un_warped
 

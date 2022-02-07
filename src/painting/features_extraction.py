@@ -49,8 +49,9 @@ def get_resnet50(image=None, dataset: Dataset = None, model_name="resnet_model")
     # base_model = ResNet50(weights='imagenet')
     base_model = load_model(os.path.join(MODEL_FOLDER, model_name))
 
-    # base_model.summary() # Summary
-    # print([layer.name for layer in base_model.layers]) # Layer's name
+    #base_model.summary() # Summary
+    #list_layers = [layer.name for layer in base_model.layers]
+    #print(list_layers[-3]) # Layer's name
 
     # model = Model(inputs=base_model.input, outputs=base_model.get_layer('avg_pool').output)
     model = Model(inputs=base_model.input, outputs=base_model.layers[-3].output)

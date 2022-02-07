@@ -103,7 +103,9 @@ class Dataset:
         return self.get_image_genre_by_index(index)
 
     def get_test_indexes(self):
-        return list(self._prev_test_index)
+        if self._test_only:
+            return list(self._prev_test_index)
+        return self._data.loc[~self._data["in_train"]].index
 
 
 if __name__ == "__main__":

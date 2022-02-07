@@ -76,22 +76,3 @@ def average_precision(relevant, retrieved, k=None):
         return 0
 
     return ap / n
-
-
-if __name__ == "__main__":
-    relevant = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    retrieved = [1, 0, 3, 0, 0, 6, 0, 0, 9, 10]
-
-    for i in range(10):
-        p = precision_at_k(relevant, retrieved, i + 1)
-        print(f"P@{i+1}:", p)
-
-    p1 = precision_at_k(relevant, retrieved, 1)
-    p3 = precision_at_k(relevant, retrieved, 3)
-    p6 = precision_at_k(relevant, retrieved, 6)
-    p9 = precision_at_k(relevant, retrieved, 9)
-    p10 = precision_at_k(relevant, retrieved, 10)
-
-    print("AP:", (p1 + p3 + p6 + p9 + p10) / 5)
-
-    print("AP:", average_precision(relevant, retrieved, 10))

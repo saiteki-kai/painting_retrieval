@@ -113,8 +113,9 @@ class ImageRetrieval:
         # query image
         query_img = self._dataset.get_image_by_index(query_idx)
         query_img = cv.cvtColor(query_img, cv.COLOR_BGR2RGB)
+        query_genre = self._dataset.get_image_genre_by_index(query_idx)
         axes[0, 2].imshow(query_img)
-        axes[0, 2].set_title("query")
+        axes[0, 2].set_title(f"query\n {query_genre}")
 
         # ranked similar image
         for n, doc_idx in enumerate(doc_indexes):
@@ -123,7 +124,9 @@ class ImageRetrieval:
             axes[1, n].imshow(doc_img)
 
             if distances is not None:
-                axes[1, n].set_title(f'dist : {distances[n]:.2f}\n"{doc_idx}"')
+                is_test = doc_idx in self._dataset.get_test_indexes()
+                genre = self._dataset.get_image_genre_by_index(doc_idx)
+                axes[1, n].set_title(f'dist : {distances[n]:.2f}\n{genre}\n({"test" if is_test else "all"})')
 
         if save:
             fig.savefig(os.path.join(OUTPUT_FOLDER, f"out_{self._feature}.png"))

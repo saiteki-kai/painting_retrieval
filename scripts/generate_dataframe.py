@@ -1,30 +1,71 @@
+from cv2 import normalize
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from collections import Counter
 
-df = pd.read_csv("./data/raw/dataset/all_data_info.csv")
+corrupted = ['69008.jpg', '121.jpg', '38324.jpg', '97976.jpg', '84772.jpg', '77094.jpg', '85232.jpg', '80945.jpg',
+             '32150.jpg', '1262.jpg', '32577.jpg', '43658.jpg', '65430.jpg', '95897.jpg', '83271.jpg', '84021.jpg',
+             '32192.jpg', '50789.jpg', '38922.jpg']
+
+df = pd.read_csv("../data/raw/dataset/all_data_info.csv")
 df.rename(columns={"new_filename": "filename"}, inplace=True)
-df.drop(
-    columns=["pixelsx", "pixelsy", "size_bytes", "artist_group", "source"], inplace=True
-)
+df.drop(columns=["pixelsx", "pixelsy", "size_bytes", "artist_group", "source"], inplace=True)
 df.dropna(subset=["genre"], inplace=True)
+df.drop(df.loc[df['filename'].isin(corrupted)].index, inplace=True)
 df.reset_index(drop=True, inplace=True)
 
 # save memory
 df["artist"] = df["artist"].astype("category")
-df["genre"] = df["genre"].astype("category")
 df["style"] = df["style"].astype("category")
 # df["date"] = pd.to_datetime(df["date"])
 
 print(df.memory_usage(deep=True))
 print(df.info())
 
-# sample a subset for faster testing -------------------------
+train_genres = df.loc[df["in_train"]]['genre'].value_counts(normalize=True).rename('percent').reset_index()
+fig = plt.figure(figsize=(15, 4))
+ax = sns.barplot(x='index', y='percent', data=train_genres, order=df.loc[df["in_train"]]['genre'].value_counts().index)
+ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+fig.savefig("genres-all.png")
+plt.show()
 
-N_train = 1000
-N_test = 500
+# ------------------------------------------------------------
+df_train = df.loc[df["in_train"]]
+c_train = Counter(df_train["genre"])
+
+genres = []
+for key, value in c_train.items():
+    if (value / len(df_train) * 100) < 1:
+        genres.append(key)
+
+others = df['genre'].str.contains('|'.join(genres))
+df.loc[others, 'genre'] = 'other'
+
+# save memory
+df["genre"] = df["genre"].astype("category")
+
+print(df.memory_usage(deep=True))
+print(df.info())
+
+train_genres = df.loc[df["in_train"]]['genre'].value_counts(normalize=True).rename('percent').reset_index()
+fig = plt.figure(figsize=(15, 4))
+ax = sns.barplot(x='index', y='percent', data=train_genres, order=df.loc[df["in_train"]]['genre'].value_counts().index)
+ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+fig.savefig("genres-reducted.png")
+plt.show()
+
+# sample a subset for faster testing -------------------------
 
 df_train = df.loc[df["in_train"]]
 df_test = df.loc[~df["in_train"]]
+
+print(len(df_train))
+print(len(df_test))
+
+N_train = 1000
+N_test = 500
 
 df_train = (
     df_train.groupby("genre", group_keys=False)
@@ -32,44 +73,37 @@ df_train = (
     .sample(frac=1)
     .reset_index(drop=True)
 )
-df_test = (
-    df_test.groupby("genre", group_keys=False)
-    .apply(lambda x: x.sample(int(np.rint(N_test * len(x) / len(df_test)))))
-    .sample(frac=1)
-    .reset_index(drop=True)
-)
+# df_test = (
+#     df_test.groupby("genre", group_keys=False)
+#     .apply(lambda x: x.sample(int(np.rint(N_test * len(x) / len(df_test)))))
+#     .sample(frac=1)
+#     .reset_index(drop=True)
+# )
 
 df = pd.concat([df_train, df_test])
 df.reset_index(drop=True, inplace=True)
 # ------------------------------------------------------------
 
-df.to_pickle("./data/raw/dataset/data_info.pkl")
-# df.to_csv("./data/raw/dataset/data_info.csv")
+df.to_pickle("../data/raw/dataset/data_info.pkl")
+# df.to_csv("../data/raw/dataset/data_info.csv")
 
-# fig = plt.figure(figsize=(15, 4))
-# ax = sns.countplot(df.loc[df["in_train"]]["genre"])
-# ax.set_xticklabels(ax.get_xticklabels(), rotation = 90)
-# fig.savefig("genres1.png")
-# plt.show()
+# from collections import Counter
 
+# c_train = Counter(df_train["genre"])
+# c_test = Counter(df_test["genre"])
 
-from collections import Counter
+# for key, value in c_train.items():
+#     if (value / len(df_train) * 100) >= 1:
+#         print(
+#             f"{key:25s}\t{(value / len(df_train)*100):5.3f}% \t{(c_test[key]/len(df_test)*100):5.3f}% "
+#         )
 
-c_train = Counter(df_train["genre"])
-c_test = Counter(df_test["genre"])
+# s_train = 0
+# s_test = 0
+# for key, value in c_train.items():
+#     if (value / len(df_train) * 100) < 1:
+#         s_train = s_train + value
+#         s_test = s_test + c_test[key]
 
-for key, value in c_train.items():
-    if (value / len(df_train) * 100) >= 1:
-        print(
-            f"{key:25s}\t{(value / len(df_train)*100):5.3f}% \t{(c_test[key]/len(df_test)*100):5.3f}% "
-        )
-
-s_train = 0
-s_test = 0
-for key, value in c_train.items():
-    if (value / len(df_train) * 100) < 1:
-        s_train = s_train + value
-        s_test = s_test + c_test[key]
-
-print(f"{s_train} {s_train / len(df_train) * 100}")
-print(f"{s_test} {s_test / len(df_test) * 100}")
+# print(f"{s_train} {s_train / len(df_train) * 100}")
+# print(f"{s_test} {s_test / len(df_test) * 100}")

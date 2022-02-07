@@ -43,11 +43,10 @@ def get_resnet50(image=None, dataset: Dataset = None):
     """
 
     model = get_classification_model()
-    print(model)
 
     if image is not None:
         image = preprocess_cv2_image_resnet(image)
-        print("Image resized into (224,224)")
+        # print("Image resized into (224,224)")
         prediction = model.predict(image)
         return prediction.flatten()
 

@@ -54,11 +54,11 @@ def compute_rgb_hist(img, bins=256):
     return np.vstack([blue_hist, green_hist, red_hist]).ravel()
 
 
-def compute_local_rgb_hist(img, blocksize=128, bins=256):
+def compute_local_rgb_hist(img, block_size=128, bins=256):
     b = []
-    for row in np.arange(0, img.shape[0], blocksize):
-        for col in np.arange(0, img.shape[1], blocksize):
-            block = img[row : row + blocksize, col : col + blocksize]
+    for row in np.arange(0, img.shape[0], block_size):
+        for col in np.arange(0, img.shape[1], block_size):
+            block = img[row: row + block_size, col: col + block_size]
             b.append(compute_rgb_hist(block, bins))
 
     return np.array(b).flatten()
@@ -120,15 +120,6 @@ def compute_dct(img):
 
     return dct
 
-def compute_orb(img):
-    # Initiate ORB detector
-    orb = cv.ORB_create()
-    # find the keypoints with ORB
-    kp = orb.detect(img,None)
-    # compute the descriptors with ORB
-    kp, des = orb.compute(img, kp)
-    # return the keypoints and the descriptors
-    return [kp, des]
 
 def compute_resnet50(dataset):
     return get_resnet50(dataset=dataset)

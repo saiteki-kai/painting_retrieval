@@ -17,6 +17,8 @@ def photo_handler(update: Update, ctx: CallbackContext):
         file = ctx.bot.getFile(update.message.photo[-1].file_id)
     elif update.message.document:
         file = ctx.bot.getFile(update.message.document.file_id)
+    else:
+        update.message.reply_text("The file must be an image")
 
     _, ext = os.path.splitext(file.file_path)
 
@@ -26,7 +28,7 @@ def photo_handler(update: Update, ctx: CallbackContext):
 
         update.message.reply_text("Matching...")
 
-        result = None # exact_matching(img)
+        result = None  # exact_matching(img)
 
         if result is None:
             update.message.reply_text("No matches found")

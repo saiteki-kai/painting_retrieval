@@ -102,7 +102,7 @@ class ImageRetrieval:
             pickle.dump(NN, index)
 
     def plot_similar_results(
-        self, query_idx, doc_indexes, distances=None, n_results=5, save=False
+            self, query_idx, doc_indexes, distances=None, n_results=5, save=False
     ):
         fig, axes = plt.subplots(2, n_results)
 
@@ -131,7 +131,7 @@ class ImageRetrieval:
             plt.show()
 
     def evaluate_query(
-        self, query_id, relevant_ids, metrics, similarity="euclidean", n_results=5
+            self, query_id, relevant_ids, metrics, similarity="euclidean", n_results=5
     ):
         retrieved_ids, _, _ = self.search(query_id, similarity, n_results)
 
@@ -146,7 +146,7 @@ class ImageRetrieval:
         return results
 
     def evaluate_queries(
-        self, query_ids, relevant_ids, metrics, similarity="euclidean", n_results=5
+            self, query_ids, relevant_ids, metrics, similarity="euclidean", n_results=5
     ):
         results = []
 
@@ -160,7 +160,7 @@ class ImageRetrieval:
 
 
 def retrieve_images(img, feature, similarity="euclidean", n_results=5):
-    ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
+    ds = Dataset(DATASET_FOLDER, image_size=(224, 224) if feature == "resnet50" else STANDARD_FEATURES_SIZE)
     ir = ImageRetrieval(feature, ds)
 
     ids, dists, secs = ir.search(img, similarity, n_results)

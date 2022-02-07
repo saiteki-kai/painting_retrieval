@@ -7,9 +7,11 @@ def set_feature_handler(update: Update, ctx: CallbackContext):
 
     keyboard = [
         [InlineKeyboardButton("ResNet50", callback_data="resnet50")],
-        [InlineKeyboardButton("RGB histogram", callback_data="rgb_hist")],
-        [InlineKeyboardButton("HSV histogram", callback_data="hsv_hist")],
+        [InlineKeyboardButton("Global RGB histogram", callback_data="rgb_hist")],
+        [InlineKeyboardButton("Local RGB histogram", callback_data="local_rgb_hist")],
+        [InlineKeyboardButton("Global HSV histogram", callback_data="hsv_hist")],
         [InlineKeyboardButton("HOG", callback_data="hog")],
+        [InlineKeyboardButton("LBP RGB", callback_data="lbp")],
     ]
 
     update.message.reply_text(

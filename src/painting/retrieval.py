@@ -1,6 +1,6 @@
 import os
 import pickle
-from time import perf_counter
+import time
 
 import cv2 as cv
 import matplotlib.pyplot as plt
@@ -8,10 +8,11 @@ import numpy
 from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
-from src.config import DATASET_FOLDER, OUTPUT_FOLDER, STANDARD_FEATURES_SIZE, FEATURES_FOLDER
+from src.config import DATASET_FOLDER, FEATURES_FOLDER, OUTPUT_FOLDER, STANDARD_FEATURES_SIZE
 from src.painting import evalutation_metrics
 from src.painting.dataset import Dataset
 from src.painting.descriptor import compute_feature
+from src.painting.features_extraction import get_resnet50
 from src.painting.utils import load_features
 
 
@@ -22,7 +23,7 @@ class ImageRetrieval:
         self._evaluation = evaluation
 
     def search(self, query, similarity="euclidean", n_results=5):
-        start_time = perf_counter()
+        start_time = time.time()
 
         # query representation
         if isinstance(query, int):
@@ -31,7 +32,6 @@ class ImageRetrieval:
             query_img = query
 
         if self._feature == "resnet50":
-            from features_extraction import get_resnet50
             q = get_resnet50(image=query_img)
         else:
             query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
@@ -46,11 +46,11 @@ class ImageRetrieval:
             distances = distances[0]
             indexes = indexes[0]
 
-            elapsed = perf_counter() - start_time
+            elapsed = time.time() - start_time
             return indexes, distances, elapsed
 
     def search_without_index(self, query, similarity="euclidean", n_results=5):
-        start_time = perf_counter()
+        start_time = time.time()
 
         # query representation
         if isinstance(query, int):
@@ -59,7 +59,6 @@ class ImageRetrieval:
             query_img = query
 
         if self._feature == "resnet50":
-            from features_extraction import get_resnet50
             q = get_resnet50(image=query_img)
         else:
             query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
@@ -83,7 +82,7 @@ class ImageRetrieval:
         ranked_indexes = ranked_indexes[:n_results]
         distances = distances[ranked_indexes]
 
-        elapsed = perf_counter() - start_time
+        elapsed = time.time() - start_time
         return ranked_indexes, distances, elapsed
 
     def index(self, similarity):
@@ -103,7 +102,7 @@ class ImageRetrieval:
             pickle.dump(NN, index)
 
     def plot_similar_results(
-            self, query_idx, doc_indexes, distances=None, n_results=5, save=False
+        self, query_idx, doc_indexes, distances=None, n_results=5, save=False
     ):
         fig, axes = plt.subplots(2, n_results)
 
@@ -132,7 +131,7 @@ class ImageRetrieval:
             plt.show()
 
     def evaluate_query(
-            self, query_id, relevant_ids, metrics, similarity="euclidean", n_results=5
+        self, query_id, relevant_ids, metrics, similarity="euclidean", n_results=5
     ):
         retrieved_ids, _, _ = self.search(query_id, similarity, n_results)
 
@@ -147,7 +146,7 @@ class ImageRetrieval:
         return results
 
     def evaluate_queries(
-            self, query_ids, relevant_ids, metrics, similarity="euclidean", n_results=5
+        self, query_ids, relevant_ids, metrics, similarity="euclidean", n_results=5
     ):
         results = []
 
@@ -164,7 +163,7 @@ def retrieve_images(img, feature, similarity="euclidean", n_results=5):
     ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
     ir = ImageRetrieval(feature, ds)
 
-    ids, dists, time = ir.search(img, similarity, n_results)
-    print("Search Time with index: ", time)
+    ids, dists, secs = ir.search(img, similarity, n_results)
+    print("Search Time with index: ", secs)
 
-    return [ds.get_image_filepath(idx) for idx in ids], time, dists
+    return [ds.get_image_filepath(idx) for idx in ids], secs, dists

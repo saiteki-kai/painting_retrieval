@@ -1,6 +1,6 @@
 import cv2 as cv
 import numpy as np
-from skimage.feature import local_binary_pattern
+from skimage.feature import local_binary_pattern, hog
 
 from src.config import LIST_OF_FEATURES_IMPLEMENTED
 from src.painting.ccv import get_ccv
@@ -12,11 +12,13 @@ def compute_feature(img, feature):
         raise ValueError(f"unrecognized feature: '{feature}'")
 
     if feature == "rgb_hist":
-        return compute_rgb_hist(img)
+        return compute_rgb_hist(img, bins=8)
+    if feature == "local_rgb_hist":
+        return compute_local_rgb_hist(img, bins=8)
     elif feature == "hsv_hist":
         return compute_hsv_hist(img)
     elif feature == "lbp":
-        return compute_lbp(img)
+        return compute_lbp_rgb(img)
     elif feature == "hog":
         return compute_hog(img)
     elif feature == "dct":
@@ -40,16 +42,26 @@ def compute_orb(img, n_features=500):
     return kp, des
 
 
-def compute_rgb_hist(img):
-    blue_hist = cv.calcHist([img], [0], None, [256], [0, 256])
-    green_hist = cv.calcHist([img], [1], None, [256], [0, 256])
-    red_hist = cv.calcHist([img], [2], None, [256], [0, 256])
+def compute_rgb_hist(img, bins=256):
+    blue_hist = cv.calcHist([img], [0], None, [bins], [0, 256])
+    green_hist = cv.calcHist([img], [1], None, [bins], [0, 256])
+    red_hist = cv.calcHist([img], [2], None, [bins], [0, 256])
 
     blue_hist = cv.normalize(blue_hist, None, 0, 1, cv.NORM_MINMAX)
     green_hist = cv.normalize(green_hist, None, 0, 1, cv.NORM_MINMAX)
     red_hist = cv.normalize(red_hist, None, 0, 1, cv.NORM_MINMAX)
 
     return np.vstack([blue_hist, green_hist, red_hist]).ravel()
+
+
+def compute_local_rgb_hist(img, blocksize=128, bins=256):
+    b = []
+    for row in np.arange(0, img.shape[0], blocksize):
+        for col in np.arange(0, img.shape[1], blocksize):
+            block = img[row : row + blocksize, col : col + blocksize]
+            b.append(compute_rgb_hist(block, bins))
+
+    return np.array(b).flatten()
 
 
 def compute_hsv_hist(img):
@@ -66,14 +78,13 @@ def compute_hsv_hist(img):
     return np.vstack([hue_hist, sat_hist, val_hist]).ravel()
 
 
-def compute_lbp(img):
+def compute_channel_lbp(img):
     radius = 2
     n_points = radius * 8
 
-    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    lbp = local_binary_pattern(img, n_points, radius, "uniform")
+    lbp = local_binary_pattern(img, n_points, radius, "nri_uniform")
 
-    bins = np.arange(0, n_points + 3)
+    bins = n_points * (n_points - 1) + 3
     lims = (0, n_points + 2)
 
     hist, _ = np.histogram(lbp.ravel(), bins=bins, range=lims)
@@ -81,11 +92,20 @@ def compute_lbp(img):
     return hist.ravel()
 
 
-def compute_hog(img):
-    hog = cv.HOGDescriptor()
-    img = hog.compute(img)
+def compute_lbp_rgb(img):
+    return np.concatenate(
+        (
+            compute_channel_lbp(img[:, :, 0]),
+            compute_channel_lbp(img[:, :, 1]),
+            compute_channel_lbp(img[:, :, 2]),
+        )
+    )
 
-    return img
+
+def compute_hog(img):
+    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    H = hog(img, pixels_per_cell=(16, 16), cells_per_block=(2, 2))
+    return H
 
 
 def compute_dct(img):

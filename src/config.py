@@ -14,6 +14,7 @@ STANDARD_FEATURES_SIZE = (512, 512)
 # For semplicity let ccv the last (not mandatory)
 LIST_OF_FEATURES_IMPLEMENTED = [
     "rgb_hist",
+    "local_rgb_hist",
     "hsv_hist",
     "lbp",
     "hog",

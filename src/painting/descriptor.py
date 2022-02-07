@@ -100,6 +100,15 @@ def compute_dct(img):
 
     return dct
 
+def compute_orb(img):
+    # Initiate ORB detector
+    orb = cv.ORB_create()
+    # find the keypoints with ORB
+    kp = orb.detect(img,None)
+    # compute the descriptors with ORB
+    kp, des = orb.compute(img, kp)
+    # return the keypoints and the descriptors
+    return [kp, des]
 
 def compute_resnet50(dataset):
     return get_resnet50(dataset=dataset)

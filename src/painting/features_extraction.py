@@ -12,7 +12,7 @@ import gc
 from keras.models import load_model
 from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing import image as image_f
-import tensorflow_addons as tfa #Used in saved_model (don't delete)
+import tensorflow_addons as tfa  # Used in saved_model (don't delete)
 from src.config import FEATURES_FOLDER, MODEL_FOLDER
 from src.painting.dataset import Dataset
 
@@ -26,24 +26,23 @@ def preprocess_cv2_image_resnet(image):
     return preprocess_input_resnet(image)
 
 
-def get_resnet50(image=None, dataset: Dataset = None, model_name='resnet_model'):
+def predictions_gen(dataset: Dataset, model):
+    for im in dataset.images():
+        im = preprocess_cv2_image_resnet(im)
+        im = model.predict(im)
+        yield im.flatten()
+
+
+def get_resnet50(image=None, dataset: Dataset = None, model_name="resnet_model"):
     """
-      image: An image opened with OpenCV2. \
+    image: An image opened with OpenCV2.
         Doesn't matter the size of the image.
-      dataset: A Dataset type. Doesn't matter the image_size of dataset. \
+    dataset: A Dataset type. Doesn't matter the image_size of dataset.
         If image not None it won't be readed.
     """
     # Clear memory
     clear_session_keras()
     gc.collect()
-
-    if image is not None:
-        image = preprocess_cv2_image_resnet(image)
-        print('Image resized into (224,224).')
-
-    elif dataset is not None:
-        dim_dataset = dataset.length()
-        print('Dataset dimension is: ' + str(dim_dataset))
 
     """## Models"""
     # This give us all the model but the last layer
@@ -54,45 +53,29 @@ def get_resnet50(image=None, dataset: Dataset = None, model_name='resnet_model')
     # print([layer.name for layer in base_model.layers]) # Layer's name
 
     # model = Model(inputs=base_model.input, outputs=base_model.get_layer('avg_pool').output)
-    model = Model(inputs=base_model.input, outputs=base_model.get_layer('dense').output)
+    model = Model(inputs=base_model.input, outputs=base_model.layers[-3].output)
+    del base_model
 
-    if image is not None:
+
+    if image is not None:   
+        image = preprocess_cv2_image_resnet(image)
+        print("Image resized into (224,224)")
         prediction = model.predict(image)
 
         # Clear memory
         clear_session_keras()
         gc.collect()
-        del base_model
         del model
 
         return prediction.flatten()
 
     elif dataset is not None:
-        for i in range(dim_dataset):
-            im = dataset.get_image_by_index(i)
-            im = preprocess_cv2_image_resnet(im)
-
-            if i % 100 == 0:
-                print("{} / {} ".format(i + 1, dim_dataset))
-
-            im = model.predict(im)
-            # im = im.reshape(im.shape[1:])
-
-            file_name = dataset.get_image_filename(i)
-
-            folder_path = os.path.join(FEATURES_FOLDER, 'resnet50')
-
-            if not os.path.exists(folder_path):
-                os.makedirs(folder_path)
-            np.save(os.path.join(folder_path, file_name), im.flatten())
-            """ We just have to read the numpy.narray using numpy.load() """
-
-        print("{} / {} ".format(dim_dataset, dim_dataset))
+        print(f"Dataset dimension is: {dataset.length()}")
+        return predictions_gen(dataset, model)
 
     # Clear memory
     clear_session_keras()
     gc.collect()
-    del base_model
     del model
 
     return None

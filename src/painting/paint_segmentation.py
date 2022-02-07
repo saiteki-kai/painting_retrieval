@@ -221,7 +221,7 @@ def hough_based_segmentation(image):
     out = draw_lines(out, v_lines, color=255, thickness=3)
     return out
 
-def cnn_based_segmentation(image, model):
+def cnn_based_segmentation(image, model, folder):
     x = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     x = cv2.resize(x, (224, 224))
     x = img_to_array(x) / 255.0
@@ -239,19 +239,19 @@ def cnn_based_segmentation(image, model):
     # masked
     masked = cv2.bitwise_and(image, image, mask=max_bw_label)
 
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '1_rgb.jpg'), image)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '2_mask.png'), mask * 255)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '3_labeling_connected_components.png'), false_colors(output, nb_components))
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '4_max_bw_label.png'), max_bw_label * 255)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '5_masked.png'), masked)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '1_rgb.jpg'), image)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '2_mask.png'), mask * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '3_labeling_connected_components.png'), false_colors(output, nb_components))
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '4_max_bw_label.png'), max_bw_label * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '5_masked.png'), masked)
     return masked, max_bw_label
 
 
-def paint_segmentation_pipeline(image, model=None):
+def paint_segmentation_pipeline(image, folder, model=None):
 
     # paint segmentation (hough based or semantic segmentation)
     if model:
-        _, mask = cnn_based_segmentation(image, model)
+        _, mask = cnn_based_segmentation(image, model, folder)
     else:
         _, mask = hough_based_segmentation(image)
 
@@ -261,13 +261,13 @@ def paint_segmentation_pipeline(image, model=None):
     erode = cv2.erode(dilate, kernel, iterations = 15)
     fillholes = (fillhole(erode) > 0).astype(np.uint8)
 
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '6_dilate.png'), dilate * 255)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '7_erode.png'), erode * 255)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '8_fillholes.png'), fillholes * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '6_dilate.png'), dilate * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '7_erode.png'), erode * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '8_fillholes.png'), fillholes * 255)
 
     # convex hull
     convex_hull = convex_hull_image(mask).astype(np.uint8)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '9_convex_hull.png'), convex_hull * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '9_convex_hull.png'), convex_hull * 255)
 
     # centroid of my mask edited with morphological operations and convexhull
     x,y,w,h = cv2.boundingRect(convex_hull)
@@ -280,17 +280,17 @@ def paint_segmentation_pipeline(image, model=None):
     # edge detection
     (T, _) = cv2.threshold(convex_hull, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
     canny = cv2.Canny(convex_hull, T * 0.5, T)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '10_canny.png'), canny)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '10_canny.png'), canny)
 
     # hough transform
     hough_lines = hough_transform(canny, threshold=100)
     hough_out = draw_lines(np.zeros(mask.shape), hough_lines, color=255, thickness=3)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '11_hough.png'), hough_out * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '11_hough.png'), hough_out * 255)
 
     # invert hough mask
     invert_hough = 255 - hough_out
     invert_hough = (invert_hough > 0).astype(np.uint8)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '12_invert_hough.png'), invert_hough * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '12_invert_hough.png'), invert_hough * 255)
 
     # labeling of the connected components [Note: range() starts from 1 since 0 is the background label.]
     nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(invert_hough, connectivity=4)
@@ -298,18 +298,18 @@ def paint_segmentation_pipeline(image, model=None):
     min_label, min_dist = min([(i, dist(centroids[i], centroid)) for i in range(1, nb_components)], key=lambda x: x[1])
     min_dist_bw_label = (output == min_label).astype(np.uint8)
 
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '13_labeling_connected_components.png'), false_colors(output, nb_components))
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '14_min_dist_bw_label.png'), min_dist_bw_label * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '13_labeling_connected_components.png'), false_colors(output, nb_components))
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '14_min_dist_bw_label.png'), min_dist_bw_label * 255)
 
     # harris corner detection
     corners_points, corners_image = harris_corner_detection(min_dist_bw_label)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, '15_harris.png'), corners_image)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '15_harris.png'), corners_image)
 
-    if len(corners_points) == 4:
+    if len(corners_points) != 4:
         x,y,w,h = cv2.boundingRect(min_dist_bw_label)
         not_unwarped = cv2.bitwise_and(image, image, mask=min_dist_bw_label)
         not_unwarped = not_unwarped[y:y+h, x:x+w]
-        cv2.imwrite(os.path.join(OUTPUT_FOLDER, 'not_un_warped.jpg'), not_unwarped)
+        cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, 'not_un_warped.jpg'), not_unwarped)
         return not_unwarped
     else:
         # se harris non ritorna 4 punti allora la segmentazione viene fatta senza unwarping!
@@ -320,6 +320,6 @@ def paint_segmentation_pipeline(image, model=None):
 
         # image distortion correction
         un_warped = warp_image(image, src)
-        cv2.imwrite(os.path.join(OUTPUT_FOLDER, 'un_warped.jpg'), un_warped)
+        cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, 'un_warped.jpg'), un_warped)
         return un_warped
 

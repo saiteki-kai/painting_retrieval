@@ -42,7 +42,7 @@ def start_bot():
 
     updater = Updater(TOKEN, persistence=persistence, use_context=True)
 
-    updater.dispatcher.add_handler(MessageHandler(Filters.photo, photo_handler))
+    updater.dispatcher.add_handler(MessageHandler(Filters.photo | Filters.attachment, photo_handler))
     updater.dispatcher.add_handler(CommandHandler("start", start_handler))
     updater.dispatcher.add_handler(CommandHandler("set_feature", set_feature_handler))
     updater.dispatcher.add_handler(CommandHandler("set_results", set_results_handler))

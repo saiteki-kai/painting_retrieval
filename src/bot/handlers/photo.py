@@ -13,7 +13,11 @@ from src.painting.retrieval import retrieve_images
 def photo_handler(update: Update, ctx: CallbackContext):
     chat_id = update.effective_chat.id
 
-    file = ctx.bot.getFile(update.message.photo[-1].file_id)
+    if len(update.message.photo) > 0:
+        file = ctx.bot.getFile(update.message.photo[-1].file_id)
+    elif update.message.document:
+        file = ctx.bot.getFile(update.message.document.file_id)
+
     _, ext = os.path.splitext(file.file_path)
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=ext) as tmp:
@@ -50,7 +54,7 @@ def photo_handler(update: Update, ctx: CallbackContext):
             with open(filepath, "rb") as img:
                 images.append(
                     InputMediaPhoto(
-                        img, caption=f"Image: {i + 1}, Distance: {dists[i]}"
+                        img, caption=f"Image: {i + 1}, Distance: {dists[i]:.2f}"
                     )
                 )
 

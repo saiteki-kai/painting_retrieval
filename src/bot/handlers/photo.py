@@ -6,7 +6,7 @@ import cv2 as cv
 from telegram import InputMediaPhoto, Update
 from telegram.ext import CallbackContext
 
-# from src.painting.exact_matching import exact_matching
+from src.painting.exact_matching import exact_matching
 from src.painting.retrieval import retrieve_images
 
 
@@ -28,7 +28,7 @@ def photo_handler(update: Update, ctx: CallbackContext):
 
         update.message.reply_text("Matching...")
 
-        result = None  # exact_matching(img)
+        result = exact_matching(img)
 
         if result is None:
             update.message.reply_text("No matches found")

@@ -3,13 +3,13 @@ from src.painting.dataset import Dataset
 from src.painting.retrieval import ImageRetrieval
 
 if __name__ == "__main__":
-    ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
+    QUERY_ID = 4445
 
-    QUERY_ID = 1320
-
-    FEATURE = "rgb_hist" # "resnet50"
+    FEATURE = "resnet50"
     SIMILARITY = "euclidean"
-    RESULTS = 5
+    RESULTS = 10
+
+    ds = Dataset(DATASET_FOLDER, image_size=(224, 224) if FEATURE == "resnet50" else STANDARD_FEATURES_SIZE)
 
     ir = ImageRetrieval(FEATURE, ds)
     ir.index(SIMILARITY)

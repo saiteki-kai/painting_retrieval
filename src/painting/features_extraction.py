@@ -18,7 +18,9 @@ from src.painting.models import get_classification_model
 
 
 def preprocess_cv2_image_resnet(image):
-    image = cv.resize(image, (224, 224))
+    if image.shape[:2] != (224, 224):
+        image = cv.resize(image, (224, 224))
+
     image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
     image = np.expand_dims(image, axis=0)
     return preprocess_input_resnet(image)

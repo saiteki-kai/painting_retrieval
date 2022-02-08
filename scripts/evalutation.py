@@ -6,10 +6,16 @@ from src.painting.dataset import Dataset
 from src.painting.retrieval import ImageRetrieval
 
 if __name__ == "__main__":
-    dataset = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE, test_only=True)
 
-    ir = ImageRetrieval("resnet50", dataset, evaluation=True)
-    ir.index("euclidean")
+    FEATURE = "resnet50"
+    SIMILARITY = "euclidean"
+    RESULTS = 5
+
+    dataset = Dataset(DATASET_FOLDER, image_size=(224, 224) if FEATURE == "resnet50" else STANDARD_FEATURES_SIZE,
+                      test_only=True)
+
+    ir = ImageRetrieval(FEATURE, dataset, evaluation=True)
+    ir.index(SIMILARITY)
 
     query_ids = list(range(1, dataset.length()))
     query_genres = [dataset.get_image_genre_by_index(query_id) for query_id in query_ids]
@@ -34,8 +40,8 @@ if __name__ == "__main__":
             q_ids,
             d_ids,
             metrics=metrics,
-            similarity="euclidean",
-            n_results=5,
+            similarity=SIMILARITY,
+            n_results=RESULTS,
         )
 
         avg_results = {m: [] for m in metrics}

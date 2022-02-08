@@ -95,8 +95,9 @@ class ImageRetrieval:
                 
                 
                 if n_results is not None:
-                    indexes_genre = indexes_genre[:n_results]
-                    distances_genre = distances_genre[:n_results]
+                    if n_results < len(indexes_genre):
+                        indexes_genre = indexes_genre[:n_results]
+                        distances_genre = distances_genre[:n_results]
 
                 elapsed = time.time() - start_time
                 return indexes_genre, distances_genre, elapsed

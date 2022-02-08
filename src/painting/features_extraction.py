@@ -11,7 +11,6 @@ import gc
 
 from keras.models import load_model
 from tensorflow.keras.models import Model
-from tensorflow.keras.preprocessing import image as image_f
 import tensorflow_addons as tfa  # Used in saved_model (don't delete)
 from src.config import FEATURES_FOLDER, MODEL_FOLDER
 from src.painting.dataset import Dataset
@@ -21,13 +20,11 @@ from src.painting.models import get_classification_model
 def preprocess_cv2_image_resnet(image):
     image = cv.resize(image, (224, 224))
     image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-    image = Image.fromarray(image)
-    image = image_f.img_to_array(image)
-    image = np.expand_dims(image, axis=0)  # maybe not
+    image = np.expand_dims(image, axis=0)
     return preprocess_input_resnet(image)
 
 
-def predictions_gen(dataset: Dataset, model):
+def predictions_dataset(dataset: Dataset, model):
     for im in dataset.images():
         im = preprocess_cv2_image_resnet(im)
         im = model.predict(im)
@@ -46,12 +43,11 @@ def get_resnet50(image=None, dataset: Dataset = None):
 
     if image is not None:
         image = preprocess_cv2_image_resnet(image)
-        # print("Image resized into (224,224)")
         prediction = model.predict(image)
         return prediction.flatten()
 
     elif dataset is not None:
         print(f"Dataset dimension is: {dataset.length()}")
-        return predictions_gen(dataset, model)
+        return predictions_dataset(dataset, model)
 
     return None

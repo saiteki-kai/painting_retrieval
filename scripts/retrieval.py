@@ -7,7 +7,7 @@ if __name__ == "__main__":
 
     QUERY_ID = 1320
 
-    FEATURE = "rgb_hist"
+    FEATURE = "rgb_hist" # "resnet50"
     SIMILARITY = "euclidean"
     RESULTS = 5
 

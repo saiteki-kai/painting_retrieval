@@ -9,10 +9,11 @@ from sklearn.metrics import pairwise_distances
 from sklearn.neighbors import NearestNeighbors
 
 from src.config import DATASET_FOLDER, FEATURES_FOLDER, OUTPUT_FOLDER, STANDARD_FEATURES_SIZE
+from src.config import LIST_GENRE, LIST_F1_PER_GENRE_ON_TEST
 from src.painting import evalutation_metrics
 from src.painting.dataset import Dataset
 from src.painting.descriptor import compute_feature
-from src.painting.features_extraction import get_resnet50
+from src.painting.features_extraction import get_resnet50, prediction_resnet50
 from src.painting.utils import load_features
 
 
@@ -48,6 +49,62 @@ class ImageRetrieval:
 
             elapsed = time.time() - start_time
             return indexes, distances, elapsed
+
+    def search_with_classification(self, query, similarity="euclidean", n_results=5, confidence=0.4):
+        start_time = time.time()
+
+        # query representation
+        if isinstance(query, int):
+            query_img = self._dataset.get_image_by_index(query)
+        else:
+            query_img = query
+
+        genre_pred = prediction_resnet50(query_img)
+        
+        if self._feature == "resnet50":
+            q = get_resnet50(image=query_img)
+        else:
+            query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
+            q = compute_feature(query_img, self._feature)
+
+        filename = f"{self._feature}-{similarity}.index"
+
+        with open(os.path.join(FEATURES_FOLDER, filename), "rb") as index:
+            NN = pickle.load(index)
+            distances, indexes = NN.kneighbors([q], self._dataset.length())
+
+            distances = distances[0]
+            indexes = indexes[0]
+
+            #Select only the indexes of the images of the same genre
+            n_genre = numpy.argmax(genre_pred)
+            print("Genre: " + LIST_GENRE[n_genre])
+
+            if LIST_F1_PER_GENRE_ON_TEST[n_genre] >= confidence:
+                print("---------------WITH CLASSIFICATION---------------")
+
+                index_genre = self._dataset.get_indexes_from_genre(LIST_GENRE[n_genre])
+
+                indexes_genre = []
+                distances_genre = []
+
+                for i in range(len(indexes)):
+                    if( indexes[i] in index_genre ):
+                        indexes_genre.append( indexes[i] )
+                        distances_genre.append( distances[i] )
+                
+                
+                if n_results is not None:
+                    indexes_genre = indexes_genre[:n_results]
+                    distances_genre = distances_genre[:n_results]
+
+                elapsed = time.time() - start_time
+                return indexes_genre, distances_genre, elapsed
+            else:
+                print("---------------WITHOUT CLASSIFICATION---------------")
+                elapsed = time.time() - start_time
+                return indexes, distances, elapsed
+
 
     def search_without_index(self, query, similarity="euclidean", n_results=5):
         start_time = time.time()
@@ -168,5 +225,8 @@ def retrieve_images(img, feature, similarity="euclidean", n_results=5):
 
     ids, dists, secs = ir.search(img, similarity, n_results)
     print("Search Time with index: ", secs)
+
+    #ids, dists, secs = ir.search_with_classification(img, similarity)
+    #print("Search Time with index: ", secs)
 
     return [ds.get_image_filepath(idx) for idx in ids], secs, dists

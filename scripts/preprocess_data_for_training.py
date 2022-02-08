@@ -138,7 +138,7 @@ def separate_image_in_folders(folder, save_folder_name):
   De-comment before run.
 """
 #separate_image_in_folders( train_folder, "refactored_train") 
-separate_image_in_folders( test_folder, "refactored_test") 
+#separate_image_in_folders( test_folder, "refactored_test") 
 
 
 print(f"There are {len(list_other_genre)} pictorial genres that appear less than 1%.")

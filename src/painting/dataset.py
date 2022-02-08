@@ -95,6 +95,15 @@ class Dataset:
         relevant_ids = docs_genres.loc[docs_genres == query_genre].index
         return list(relevant_ids)
 
+    def get_indexes_from_genre(self, genre):
+        """
+        List of index with same genre of the 'index' image.
+        """
+        docs_genres = self._data.loc[~self._data["in_train"]]["genre"]
+
+        relevant_ids = docs_genres.loc[docs_genres == genre].index
+        return list(relevant_ids)
+
     def get_image_genre_by_index(self, index):
         return self._data["genre"][index]
 

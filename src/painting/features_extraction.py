@@ -14,7 +14,7 @@ from tensorflow.keras.models import Model
 import tensorflow_addons as tfa  # Used in saved_model (don't delete)
 from src.config import FEATURES_FOLDER, MODEL_FOLDER
 from src.painting.dataset import Dataset
-from src.painting.models import get_classification_model
+from src.painting.models import get_classification_model, get_prediction_model
 
 
 def preprocess_cv2_image_resnet(image):
@@ -39,6 +39,8 @@ def get_resnet50(image=None, dataset: Dataset = None):
         Doesn't matter the size of the image.
     dataset: A Dataset type. Doesn't matter the image_size of dataset.
         If image not None it won't be readed.
+    
+    output: 1024 long features array
     """
 
     model = get_classification_model()
@@ -51,5 +53,16 @@ def get_resnet50(image=None, dataset: Dataset = None):
     elif dataset is not None:
         print(f"Dataset dimension is: {dataset.length()}")
         return predictions_dataset(dataset, model)
+
+    return None
+
+
+def prediction_resnet50(image):
+    base_model = get_prediction_model()
+
+    if image is not None:
+        image = preprocess_cv2_image_resnet(image)
+        prediction = base_model.predict(image)
+        return prediction.flatten()
 
     return None

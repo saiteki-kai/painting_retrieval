@@ -1,24 +1,29 @@
+import os.path
+
 import cv2 as cv
 import numpy as np
+from joblib import load
 from skimage.feature import local_binary_pattern, hog
 
-from src.config import LIST_OF_FEATURES_IMPLEMENTED
+from src.config import LIST_OF_FEATURES_IMPLEMENTED, FEATURES_FOLDER
 from src.painting.ccv import get_ccv
 from src.painting.features_extraction import get_resnet50
 
 
 def compute_feature(img, feature):
-    if feature not in LIST_OF_FEATURES_IMPLEMENTED:
+    if feature != "combined" and feature not in LIST_OF_FEATURES_IMPLEMENTED:
         raise ValueError(f"unrecognized feature: '{feature}'")
 
     if feature == "rgb_hist":
-        return compute_rgb_hist(img, bins=8)
+        return compute_rgb_hist(img, bins=256)
     if feature == "local_rgb_hist":
-        return compute_local_rgb_hist(img, bins=8)
+        return compute_local_rgb_hist(img, block_size=256, bins=32)
     elif feature == "hsv_hist":
-        return compute_hsv_hist(img)
+        return compute_hsv_hist(img, bins=(16, 4, 4))  # 180 256, 256
+    elif feature == "local_hsv_hist":
+        return compute_local_hsv_hist(img, block_size=256, bins=8)
     elif feature == "lbp":
-        return compute_lbp_rgb(img)
+        return compute_lbp_gray(img)
     elif feature == "hog":
         return compute_hog(img)
     elif feature == "dct":
@@ -29,6 +34,8 @@ def compute_feature(img, feature):
         return compute_ccv(img)
     elif feature == "orb":
         return compute_orb(img)
+    elif feature == "combined":
+        return compute_combined(img)
 
 
 def compute_orb(img, n_features=500):
@@ -54,7 +61,7 @@ def compute_rgb_hist(img, bins=256):
     return np.vstack([blue_hist, green_hist, red_hist]).ravel()
 
 
-def compute_local_rgb_hist(img, block_size=128, bins=256):
+def compute_local_color_hist(img, block_size=128, bins=256):
     b = []
     for row in np.arange(0, img.shape[0], block_size):
         for col in np.arange(0, img.shape[1], block_size):
@@ -64,12 +71,21 @@ def compute_local_rgb_hist(img, block_size=128, bins=256):
     return np.array(b).flatten()
 
 
-def compute_hsv_hist(img):
+def compute_local_rgb_hist(img, block_size=128, bins=256):
+    return compute_local_color_hist(img, block_size, bins)
+
+
+def compute_local_hsv_hist(img, block_size=128, bins=256):
+    img = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+    return compute_local_color_hist(img, block_size, bins)
+
+
+def compute_hsv_hist(img, bins=(8, 8, 8)):
     img = cv.cvtColor(img, cv.COLOR_BGR2HSV)
 
-    hue_hist = cv.calcHist([img], [0], None, [180], [0, 180])
-    sat_hist = cv.calcHist([img], [1], None, [256], [0, 256])
-    val_hist = cv.calcHist([img], [2], None, [256], [0, 256])
+    hue_hist = cv.calcHist([img], [0], None, [bins[0]], [0, 180])
+    sat_hist = cv.calcHist([img], [1], None, [bins[1]], [0, 256])
+    val_hist = cv.calcHist([img], [2], None, [bins[2]], [0, 256])
 
     hue_hist = cv.normalize(hue_hist, None, 0, 1, cv.NORM_MINMAX)
     sat_hist = cv.normalize(sat_hist, None, 0, 1, cv.NORM_MINMAX)
@@ -79,7 +95,7 @@ def compute_hsv_hist(img):
 
 
 def compute_channel_lbp(img):
-    radius = 2
+    radius = 1 # 2
     n_points = radius * 8
 
     lbp = local_binary_pattern(img, n_points, radius, "nri_uniform")
@@ -90,6 +106,11 @@ def compute_channel_lbp(img):
     hist, _ = np.histogram(lbp.ravel(), bins=bins, range=lims)
     hist = hist / (np.linalg.norm(hist) + 1e-7)
     return hist.ravel()
+
+
+def compute_lbp_gray(img):
+    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    return compute_channel_lbp(img)
 
 
 def compute_lbp_rgb(img):
@@ -127,3 +148,17 @@ def compute_resnet50(dataset):
 
 def compute_ccv(img, n=2, tau=0.01):
     return get_ccv(img, n=n, tau=tau)
+
+
+def compute_combined(img):
+    lbp_gray = compute_lbp_gray(img)
+    rgb_hist = compute_rgb_hist(img, bins=256)
+    print(lbp_gray.shape)
+    print(rgb_hist.shape)
+
+    combined = np.hstack((rgb_hist, lbp_gray))
+    pca = load(os.path.join(FEATURES_FOLDER, "pca_params"))
+
+    combined = pca.transform(combined.reshape(1, -1))
+    print(combined.shape)
+    return combined

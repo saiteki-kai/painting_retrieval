@@ -8,7 +8,7 @@ from src.config import LIST_OF_FEATURES_IMPLEMENTED, FEATURES_FOLDER
 
 
 def load_features(feature):
-    if feature not in LIST_OF_FEATURES_IMPLEMENTED:
+    if feature != "combined" and feature not in LIST_OF_FEATURES_IMPLEMENTED:
         raise ValueError(f"unrecognized feature: '{feature}'")
 
     filepath = os.path.join(FEATURES_FOLDER, f"{feature}.npy")

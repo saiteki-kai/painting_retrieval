@@ -37,6 +37,7 @@ class ImageRetrieval:
         else:
             query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
             q = compute_feature(query_img, self._feature)
+            q = q.ravel()
 
         filename = f"{self._feature}-{similarity}.index"
 
@@ -106,7 +107,6 @@ class ImageRetrieval:
                 elapsed = time.time() - start_time
                 return indexes, distances, elapsed
 
-
     def search_without_index(self, query, similarity="euclidean", n_results=5):
         start_time = time.time()
 
@@ -121,6 +121,7 @@ class ImageRetrieval:
         else:
             query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
             q = compute_feature(query_img, self._feature)
+            q = q.ravel()
 
         # load the raw document representation
         features = load_features(self._feature)

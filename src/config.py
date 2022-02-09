@@ -16,6 +16,7 @@ LIST_OF_FEATURES_IMPLEMENTED = [
     "rgb_hist",
     "local_rgb_hist",
     "hsv_hist",
+    "local_hsv_hist",
     "lbp",
     "hog",
     "dct",

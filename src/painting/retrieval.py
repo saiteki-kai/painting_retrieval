@@ -59,14 +59,13 @@ class ImageRetrieval:
             query_img = self._dataset.get_image_by_index(query)
         else:
             query_img = query
-
-        genre_pred = prediction_resnet50(query_img)
         
         if self._feature == "resnet50":
             q = get_resnet50(image=query_img)
         else:
             query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
             q = compute_feature(query_img, self._feature)
+            q = q.ravel()
 
         filename = f"{self._feature}-{similarity}.index"
 
@@ -78,11 +77,13 @@ class ImageRetrieval:
             indexes = indexes[0]
 
             #Select only the indexes of the images of the same genre
+            genre_pred = prediction_resnet50(query_img)
             n_genre = numpy.argmax(genre_pred)
             print("Genre: " + LIST_GENRE[n_genre])
 
             if LIST_F1_PER_GENRE_ON_TEST[n_genre] >= confidence:
                 print("---------------WITH CLASSIFICATION---------------")
+                print("----------CONFIDENCE " + str(LIST_F1_PER_GENRE_ON_TEST[n_genre]) + "----------")
 
                 index_genre = self._dataset.get_indexes_from_genre(LIST_GENRE[n_genre])
 
@@ -104,6 +105,7 @@ class ImageRetrieval:
                 return indexes_genre, distances_genre, elapsed
             else:
                 print("---------------WITHOUT CLASSIFICATION---------------")
+                print("----------CONFIDENCE " + str(LIST_F1_PER_GENRE_ON_TEST[n_genre]) + "----------")
                 elapsed = time.time() - start_time
                 return indexes, distances, elapsed
 
@@ -163,6 +165,19 @@ class ImageRetrieval:
     def plot_similar_results(
             self, query_idx, doc_indexes, distances=None, n_results=5, save=False
     ):
+        """
+            We do not raccomand to use values of n_results higher than 5.
+        """
+
+        n_actual_results = len(doc_indexes)
+
+        if n_results is None or n_results > n_actual_results:
+            n_results = n_actual_results
+        
+        if n_results < n_actual_results:
+            doc_indexes = doc_indexes[:n_results]
+        
+        
         fig, axes = plt.subplots(2, n_results)
 
         # hide axis

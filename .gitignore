@@ -167,3 +167,4 @@ model/**
 !/model/model_info.txt
 !/model/KMeans_BOW.joblib 
 !/model/Scaler_BOW.joblib
+src/painting/prova.py

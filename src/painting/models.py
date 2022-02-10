@@ -70,6 +70,8 @@ def load_models():
     load_classification_model()
     get_prediction_model()
     load_segmentation_model()
+    load_kmeans_model()
+    load_scaler_model()
 
 
 def get_classification_model():

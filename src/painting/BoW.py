@@ -14,10 +14,6 @@ def getDescriptors(sift, img):
     kp, des = sift.detectAndCompute(img, None)
     return des
 
-def readImage(img_path):
-    img = cv2.imread(img_path, 0)
-    return cv2.resize(img,(150,150)) #Speed up, just for now
-
 def vstackDescriptors(descriptor_list):
     descriptors = np.array(descriptor_list[0])
     for descriptor in descriptor_list[1:]:
@@ -55,6 +51,8 @@ def trainModel(ds:Dataset, n_clusters, verbose=None):
     descriptor_list = []
     image_count = ds.length()
     
+    actual_image_count = 0
+    
     for n_img in range(image_count):    
 
         img = ds.get_image_by_index(n_img)
@@ -63,12 +61,15 @@ def trainModel(ds:Dataset, n_clusters, verbose=None):
             des = getDescriptors(sift, img)
             if des is not None:
                 descriptor_list.append(des)
+                actual_image_count += 1
 
         if (verbose is not None) and (n_img % 1000 == 0):
             print(f"{n_img+1} / {image_count}")
 
     if verbose is not None:
         print(f"{image_count} / {image_count}")
+
+    image_count = actual_image_count
 
     descriptors = vstackDescriptors(descriptor_list)
     if verbose is not None:
@@ -87,7 +88,7 @@ def trainModel(ds:Dataset, n_clusters, verbose=None):
     
     scale = StandardScaler().fit(im_features)
     scaler_path = os.path.join(MODEL_FOLDER, 'Scaler_BOW.joblib')
-    dump(kmeans, scaler_path) 
+    dump(scale, scaler_path) 
     im_features = scale.transform(im_features)
     if verbose is not None:
         print("Train images normalized.")
@@ -95,28 +96,46 @@ def trainModel(ds:Dataset, n_clusters, verbose=None):
     return kmeans, scale, im_features
 
 def featuresBOW(img, n_clusters, kmeans=None, scale:StandardScaler=None, verbose=None):
+    if verbose is not None:
+        print(f"Test image size { img.shape }")
 
     if kmeans is None:
+        if verbose is not None:
+            print("Getting KMeans model")
         kmean_path = os.path.join(MODEL_FOLDER, 'KMeans_BOW.joblib')
         kmeans = load(kmean_path) 
     if scale is None:
+        if verbose is not None:
+            print("Getting Scaler model")
         scaler_path = os.path.join(MODEL_FOLDER, 'Scaler_BOW.joblib')
         scale = load(scaler_path)  
 
     sift = cv2.SIFT_create()
 
-    descriptor = getDescriptors(sift, img)
-    descriptors = vstackDescriptors([descriptor])
+    if verbose is not None:
+        print("Getting descriptors of test.")
+
+    descriptor_list = []
+    des = getDescriptors(sift, img)
+    descriptor_list.append(des)
+
+    if verbose is not None:
+        print("Descriptors of test done.")
+    if verbose is not None:
+        print("Images starting features extraction.")
 
     count = 1
-    features = extractFeatures(kmeans, [descriptor], count, n_clusters)
+    im_features = extractFeatures(kmeans, descriptor_list, count, n_clusters)
+    if verbose is not None:
+        print("Images features extracted.")
+        print("Scaler transforming.")
 
-    features = scale.transform(features)
+    im_features = scale.transform(im_features)
     
     if verbose is not None:
         print("Execution done.")
     
-    return descriptors, features[0]
+    return im_features[0]
 
 
 

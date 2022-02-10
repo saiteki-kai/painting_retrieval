@@ -8,6 +8,7 @@ from keras.models import load_model
 from src.config import MODEL_FOLDER
 from tensorflow.keras.models import Model
 import segmentation_models as sm
+from joblib import load as load_joblib
 
 sm.set_framework("tf.keras")
 
@@ -19,6 +20,9 @@ prediction_model = None
 classification_model = None
 segmentation_model = None
 
+# For BOW
+kmeans_model = None
+scaler_model = None
 
 def load_classification_model(model_name="resnet_model"):
     base_model = load_model(os.path.join(MODEL_FOLDER, model_name))
@@ -44,6 +48,24 @@ def load_segmentation_model(backbone="resnet34"):
     segmentation_model = model
 
 
+def load_kmeans_model():
+
+    kmean_path = os.path.join(MODEL_FOLDER, 'KMeans_BOW.joblib')
+    model = load_joblib(kmean_path) 
+
+    global kmeans_model
+    kmeans_model = model
+
+
+
+def load_scaler_model():
+    scaler_path = os.path.join(MODEL_FOLDER, 'Scaler_BOW.joblib')
+    model = load_joblib(scaler_path) 
+
+    global scaler_model
+    scaler_model = model
+
+
 def load_models():
     load_classification_model()
     get_prediction_model()
@@ -66,3 +88,15 @@ def get_segmentation_model():
     if segmentation_model is None:
         load_segmentation_model()
     return segmentation_model
+
+def get_kmeans_model():
+    if kmeans_model is None:
+        load_kmeans_model()
+
+    return kmeans_model
+
+def get_scaler_model():
+    if scaler_model is None:
+        load_scaler_model()
+
+    return scaler_model

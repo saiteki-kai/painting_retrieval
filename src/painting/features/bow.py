@@ -1,13 +1,15 @@
 import cv2
 import numpy as np 
 import os
+import time
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from joblib import dump, load
 from src.painting.dataset import Dataset
 from src.config import LIST_GENRE, MODEL_FOLDER, DATASET_FOLDER
+from src.painting.models import get_kmeans_model, get_scaler_model
 
-
+TRAIN_SIZE = (128, 128)
 NUM_CLASSES = len(LIST_GENRE)
 
 def getDescriptors(sift, img):
@@ -27,36 +29,39 @@ def clusterDescriptors(descriptors, n_clusters):
     dump(kmeans, kmean_path) 
     return kmeans
 
-def extractFeatures(kmeans, descriptor_list, image_count, n_clusters):
+def extractFeatures(kmeans, descriptor_list, image_count, n_clusters, verbose=None):
     im_features = np.array([np.zeros(n_clusters) for i in range(image_count)])
     for i in range(image_count):
-        if i % 10 == 0:
+        if (verbose is not None) and (i % 10 == 0):
             print(f"{i+1} / {image_count}")
         for j in range(len(descriptor_list[i])):
             feature = descriptor_list[i][j]
             feature = feature.reshape(1, 128)
             idx = kmeans.predict(feature)
             im_features[i][idx] += 1
-    print(f"{image_count} / {image_count}")
+    if verbose is not None:
+        print(f"{image_count} / {image_count}")
 
     return im_features
 
 def normalizeFeatures(scale, features):
     return scale.transform(features)
 
-def trainModel(ds:Dataset, n_clusters, verbose=None):
+def trainModelBOW(ds:Dataset, n_clusters, verbose=None):
 
-    #images = ds.images()
     sift =  cv2.SIFT_create() 
     descriptor_list = []
     image_count = ds.length()
     
     actual_image_count = 0
-    
+    if verbose is not None:
+        start = time.time()
     for n_img in range(image_count):    
 
         img = ds.get_image_by_index(n_img)
-
+        if img.shape[:2] != TRAIN_SIZE:
+            img = cv2.resize(img, TRAIN_SIZE)
+        
         if img is not None:
             des = getDescriptors(sift, img)
             if des is not None:
@@ -68,6 +73,8 @@ def trainModel(ds:Dataset, n_clusters, verbose=None):
 
     if verbose is not None:
         print(f"{image_count} / {image_count}")
+        end = time.time()
+        print(f"Sift detectAndCompute time: {end - start}")
 
     image_count = actual_image_count
 
@@ -80,10 +87,13 @@ def trainModel(ds:Dataset, n_clusters, verbose=None):
     if verbose is not None:
         print("Descriptors clustered.")
         print("Images starting features extraction.")
+        start = time.time()
 
-    im_features = extractFeatures(kmeans, descriptor_list, image_count, n_clusters)
+    im_features = extractFeatures(kmeans, descriptor_list, image_count, n_clusters, verbose)
     if verbose is not None:
-        print("Images features extracted.")
+        end = time.time()
+        print(f"Images features extracted in {end - start}.")
+        print(f"Average of {(end - start)/image_count} per image.")
         print("Train images start normalizing.")
     
     scale = StandardScaler().fit(im_features)
@@ -98,17 +108,24 @@ def trainModel(ds:Dataset, n_clusters, verbose=None):
 def featuresBOW(img, n_clusters, kmeans=None, scale:StandardScaler=None, verbose=None):
     if verbose is not None:
         print(f"Test image size { img.shape }")
+        if img.shape[:2] != TRAIN_SIZE:
+            print(f"Reshaped into {TRAIN_SIZE}.")
+
+    if img.shape[:2] != TRAIN_SIZE:
+        img = cv2.resize(img, TRAIN_SIZE)
 
     if kmeans is None:
         if verbose is not None:
             print("Getting KMeans model")
-        kmean_path = os.path.join(MODEL_FOLDER, 'KMeans_BOW.joblib')
-        kmeans = load(kmean_path) 
+        #kmean_path = os.path.join(MODEL_FOLDER, 'KMeans_BOW.joblib')
+        #kmeans = load(kmean_path) 
+        kmeans = get_kmeans_model()
     if scale is None:
         if verbose is not None:
             print("Getting Scaler model")
-        scaler_path = os.path.join(MODEL_FOLDER, 'Scaler_BOW.joblib')
-        scale = load(scaler_path)  
+        #scaler_path = os.path.join(MODEL_FOLDER, 'Scaler_BOW.joblib')
+        #scale = load(scaler_path)  
+        scale = get_scaler_model()
 
     sift = cv2.SIFT_create()
 
@@ -117,6 +134,8 @@ def featuresBOW(img, n_clusters, kmeans=None, scale:StandardScaler=None, verbose
 
     descriptor_list = []
     des = getDescriptors(sift, img)
+    if des is None:
+        return [0] * n_clusters
     descriptor_list.append(des)
 
     if verbose is not None:

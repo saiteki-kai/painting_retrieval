@@ -160,7 +160,7 @@ data/features/
 data/raw/retrieval/
 data/raw/dataset/**
 !/data/raw/dataset/data_info.pkl
-!/data/raw/dataset/data_info.csv
+!/data/raw/dataset/data_info_subsampled.pkl
 
 model/**
 !/model/resnet_model.zip

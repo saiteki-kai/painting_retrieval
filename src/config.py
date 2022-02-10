@@ -24,6 +24,7 @@ LIST_OF_FEATURES_IMPLEMENTED = [
     "edge_hist",
     "ccv",
     "orb",
+    "bow",
     "combined"
 ]
 

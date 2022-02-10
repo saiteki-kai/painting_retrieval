@@ -11,6 +11,7 @@ from src.painting.features.histogram import compute_rgb_hist, compute_local_rgb_
     compute_local_hsv_hist
 from src.painting.features.lbp import compute_lbp_rgb, compute_lbp_gray
 from src.painting.features.resnet import get_resnet50
+from src.painting.features.bow import featuresBOW
 
 
 def compute_feature(img, feature):
@@ -35,6 +36,8 @@ def compute_feature(img, feature):
         return compute_resnet50(img)
     elif feature == "orb":
         return compute_orb(img)
+    elif feature == "bow":
+        return compute_bow(img)
     elif feature == "combined":
         return compute_combined(img)
 
@@ -58,6 +61,9 @@ def compute_hog(img):
 
 def compute_resnet50(dataset):
     return get_resnet50(dataset=dataset)
+
+def compute_bow(img):
+    return featuresBOW(img)
 
 
 def compute_combined(img):

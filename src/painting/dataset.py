@@ -13,10 +13,11 @@ class Dataset:
             image_size=STANDARD_FEATURES_SIZE,
             custom_read_image=None,
             test_only=False,
+            name_pickle_file = "data_info.pkl",
     ):
         self._folder = folder
         self._test_only = test_only
-        self._data = pd.read_pickle(os.path.join(folder, "data_info.pkl"))
+        self._data = pd.read_pickle(os.path.join(folder, name_pickle_file))
 
         if self._test_only:
             self._data = self._data.loc[~self._data["in_train"]]

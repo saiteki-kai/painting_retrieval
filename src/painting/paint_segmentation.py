@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import skimage.exposure as exposure
 from medpy.filter.smoothing import anisotropic_diffusion
 from skimage.morphology import convex_hull_image
+from utils import resize_with_max_ratio
 
 from src.config import MODEL_FOLDER, OUTPUT_FOLDER
 
@@ -14,7 +15,6 @@ import segmentation_models as sm
 
 BACKBONE = 'resnet34'
 preprocess_input = sm.get_preprocessing('resnet34')
-
 
 
 def sobel(gray, ksize):
@@ -97,7 +97,7 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2):
         for rho, theta in line:
             t = theta * 180 / np.pi
             t = np.mod(t, 90)
-            k = 40
+            k = 30
 
             if t >= 45 - k and t <= 45 + k:
                 continue
@@ -114,33 +114,16 @@ def draw_lines(image, lines, color=[255, 0, 0], thickness=2):
     return image
 
 
-def harris_corner_detection(image, T=50):
+def corner_detection(image, T=0.01, min_dist=50):
     corners_points = []
     corners_image = np.zeros_like(image)
 
-    dst = cv2.cornerHarris(image, 2, 5, 0.04)
-    dst = cv2.dilate(dst, None)
-
-    # take all the possible coordinates obtained by harris
-    corners_image[dst > 0.01 * dst.max()] = 255
-    coordinates = np.argwhere(corners_image)
-    coordinates_list = [l.tolist() for l in list(coordinates)]
-    pts = [tuple(l) for l in coordinates_list]
+    # detect corners
+    pts_copy = cv2.goodFeaturesToTrack(image, 4, T, min_dist)
+    pts_copy = np.int0([pt[0] for pt in pts_copy])
 
     # compute the distance from each corner to every other corner
     euclidian_dist = lambda pt1, pt2 : np.sqrt((pt2[1] - pt1[1]) ** 2 + (pt2[0] - pt1[0]) ** 2)
-
-    # filter the points
-    #pts = [p for i in range(1, len(pts)) for p in pts[i::1] if (euclidian_dist(pts[i], p) >= T)]
-
-    pts_copy = pts
-    i = 1
-    for pt1 in pts:
-        for pt2 in pts[i::1]:
-            if (euclidian_dist(pt1, pt2) < T):
-                pts_copy.remove(pt2)
-        i += 1
-    print(len(pts_copy))
 
     # if the points are not 4 we return zero points!
     if len(pts_copy) == 4:
@@ -148,13 +131,13 @@ def harris_corner_detection(image, T=50):
         # sort coordinates_tuples (tl, tr, bl, br)
         [h, w] = image.shape
         tl_index = np.asarray([euclidian_dist(pt, (0, 0)) for pt in pts_copy]).argmin()
-        tr_index = np.asarray([euclidian_dist(pt, (0, w)) for pt in pts_copy]).argmin()
-        bl_index = np.asarray([euclidian_dist(pt, (h, 0)) for pt in pts_copy]).argmin()
-        br_index = np.asarray([euclidian_dist(pt, (h, w)) for pt in pts_copy]).argmin()
+        tr_index = np.asarray([euclidian_dist(pt, (w, 0)) for pt in pts_copy]).argmin()
+        bl_index = np.asarray([euclidian_dist(pt, (0, h)) for pt in pts_copy]).argmin()
+        br_index = np.asarray([euclidian_dist(pt, (w, h)) for pt in pts_copy]).argmin()
         corners_points = np.asarray([pts_copy[tl_index], pts_copy[tr_index], pts_copy[br_index], pts_copy[bl_index]])
 
         for pt in corners_points:
-            cv2.circle(corners_image, tuple(reversed(pt)), 10, 255, -1)
+            cv2.circle(corners_image, tuple(pt), 10, 255, -1)
 
     return corners_points, corners_image
 
@@ -178,6 +161,8 @@ def get_destination_points(corners):
     return destination_corners, h, w
 
 def warp_image(img, src):
+    # invert points coordinates
+    src = np.array([[point[0], point[1]] for point in src], dtype="float32")
     (tl, tr, br, bl) = src
 
     w1 = int(np.hypot(bl[0] - br[0], bl[1] - br[1]))
@@ -229,7 +214,7 @@ def cnn_based_segmentation(image, model, folder):
     x = np.expand_dims(x, axis=0)
     pred = model.predict(x, batch_size=1)
     mask = (pred.squeeze() >= 0.5).astype(np.uint8)
-    mask = cv2.resize(mask,(image.shape[1], image.shape[0])) #expand_dims swappa le dimensioni
+    mask = cv2.resize(mask, (image.shape[1], image.shape[0]))
 
     # labeling of the connected components [Note: range() starts from 1 since 0 is the background label.]
     nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(mask, connectivity=4)
@@ -249,25 +234,26 @@ def cnn_based_segmentation(image, model, folder):
 
 def paint_segmentation_pipeline(image, folder, model=None):
 
+    # resize
+    resized = resize_with_max_ratio(image, 1024, 1024)
+
     # paint segmentation (hough based or semantic segmentation)
     if model:
-        _, mask = cnn_based_segmentation(image, model, folder)
+        _, mask = cnn_based_segmentation(resized, model, folder)
     else:
-        _, mask = hough_based_segmentation(image)
+        _, mask = hough_based_segmentation(resized)
 
     # morphology operations
     kernel = np.ones((3, 3), np.uint8)
-    dilate = cv2.dilate(mask, kernel, iterations = 15)
-    erode = cv2.erode(dilate, kernel, iterations = 15)
-    fillholes = (fillhole(erode) > 0).astype(np.uint8)
+    closing = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=30, borderValue=0)
+    fillholes = (fillhole(closing) > 0).astype(np.uint8)
 
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '6_dilate.png'), dilate * 255)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '7_erode.png'), erode * 255)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '8_fillholes.png'), fillholes * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '6_close.png'), closing * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '7_fillholes.png'), fillholes * 255)
 
     # convex hull
-    convex_hull = convex_hull_image(mask).astype(np.uint8)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '9_convex_hull.png'), convex_hull * 255)
+    convex_hull = convex_hull_image(fillholes).astype(np.uint8)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '8_convex_hull.png'), convex_hull * 255)
 
     # centroid of my mask edited with morphological operations and convexhull
     x,y,w,h = cv2.boundingRect(convex_hull)
@@ -280,17 +266,17 @@ def paint_segmentation_pipeline(image, folder, model=None):
     # edge detection
     (T, _) = cv2.threshold(convex_hull, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
     canny = cv2.Canny(convex_hull, T * 0.5, T)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '10_canny.png'), canny)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '9_canny.png'), canny)
 
     # hough transform
-    hough_lines = hough_transform(canny, threshold=100)
+    hough_lines = hough_transform(canny, threshold=30)
     hough_out = draw_lines(np.zeros(mask.shape), hough_lines, color=255, thickness=3)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '11_hough.png'), hough_out * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '10_hough.png'), hough_out * 255)
 
     # invert hough mask
     invert_hough = 255 - hough_out
     invert_hough = (invert_hough > 0).astype(np.uint8)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '12_invert_hough.png'), invert_hough * 255)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '11_invert_hough.png'), invert_hough * 255)
 
     # labeling of the connected components [Note: range() starts from 1 since 0 is the background label.]
     nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(invert_hough, connectivity=4)
@@ -298,28 +284,35 @@ def paint_segmentation_pipeline(image, folder, model=None):
     min_label, min_dist = min([(i, dist(centroids[i], centroid)) for i in range(1, nb_components)], key=lambda x: x[1])
     min_dist_bw_label = (output == min_label).astype(np.uint8)
 
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '13_labeling_connected_components.png'), false_colors(output, nb_components))
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '14_min_dist_bw_label.png'), min_dist_bw_label * 255)
+    x1,x2,w1,h1 = cv2.boundingRect(min_dist_bw_label)
+    min_dist = min(w1, h1) * 0.75
 
-    # harris corner detection
-    corners_points, corners_image = harris_corner_detection(min_dist_bw_label)
-    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '15_harris.png'), corners_image)
+    """copy = np.zeros(resized.shape)
+    copy[:,:,0] = min_dist_bw_label
+    copy[:,:,1] = min_dist_bw_label
+    copy[:,:,2] = min_dist_bw_label
+    cv2.rectangle(copy, (x1, x2), (x1+w1, x2+h1), (0, 255, 0), 3)"""
+
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '12_labeling_connected_components.png'), false_colors(output, nb_components))
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '13_min_dist_bw_label.png'), min_dist_bw_label*255)
+
+    # corner detection
+    corners_points, corners_image = corner_detection(min_dist_bw_label, T=0.01, min_dist=min_dist)
+    cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, '14_harris.png'), corners_image)
 
     if len(corners_points) != 4:
+        print(folder, len(corners_points))
+
+    # if the corners detected are not 4 the warped image is not corrected!
+    if len(corners_points) != 4:
         x,y,w,h = cv2.boundingRect(min_dist_bw_label)
-        not_unwarped = cv2.bitwise_and(image, image, mask=min_dist_bw_label)
+        not_unwarped = cv2.bitwise_and(resized, resized, mask=min_dist_bw_label)
         not_unwarped = not_unwarped[y:y+h, x:x+w]
         cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, 'not_un_warped.jpg'), not_unwarped)
-        return not_unwarped
+        return not_unwarped, w1, h1
     else:
-        # se harris non ritorna 4 punti allora la segmentazione viene fatta senza unwarping!
-        # harris ritorna in un ordine strano i punti! devo ordinarli!
-
-        # invert points coordinates
-        src = np.array([[point[1], point[0]] for point in corners_points], dtype="float32")
-
         # image distortion correction
-        un_warped = warp_image(image, src)
+        un_warped = warp_image(resized, corners_points)
         cv2.imwrite(os.path.join(OUTPUT_FOLDER, folder, 'un_warped.jpg'), un_warped)
-        return un_warped
+        return un_warped, w1, h1
 

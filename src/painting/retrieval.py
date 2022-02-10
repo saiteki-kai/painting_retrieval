@@ -35,13 +35,14 @@ class ImageRetrieval:
         if self._feature == "resnet50":
             q = get_resnet50(image=query_img)
         else:
-            query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
             q = compute_feature(query_img, self._feature)
             q = q.ravel()
 
+        subfolder = "evaluation" if self._evaluation else ""
+
         filename = f"{self._feature}-{similarity}.index"
 
-        with open(os.path.join(FEATURES_FOLDER, filename), "rb") as index:
+        with open(os.path.join(FEATURES_FOLDER, subfolder, filename), "rb") as index:
             NN = pickle.load(index)
             distances, indexes = NN.kneighbors([q], n_results)
 
@@ -61,11 +62,10 @@ class ImageRetrieval:
             query_img = query
 
         genre_pred = prediction_resnet50(query_img)
-        
+
         if self._feature == "resnet50":
             q = get_resnet50(image=query_img)
         else:
-            query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
             q = compute_feature(query_img, self._feature)
 
         filename = f"{self._feature}-{similarity}.index"
@@ -77,7 +77,7 @@ class ImageRetrieval:
             distances = distances[0]
             indexes = indexes[0]
 
-            #Select only the indexes of the images of the same genre
+            # Select only the indexes of the images of the same genre
             n_genre = numpy.argmax(genre_pred)
             print("Genre: " + LIST_GENRE[n_genre])
 
@@ -90,11 +90,10 @@ class ImageRetrieval:
                 distances_genre = []
 
                 for i in range(len(indexes)):
-                    if( indexes[i] in index_genre ):
-                        indexes_genre.append( indexes[i] )
-                        distances_genre.append( distances[i] )
-                
-                
+                    if (indexes[i] in index_genre):
+                        indexes_genre.append(indexes[i])
+                        distances_genre.append(distances[i])
+
                 if n_results is not None:
                     if n_results < len(indexes_genre):
                         indexes_genre = indexes_genre[:n_results]
@@ -119,7 +118,6 @@ class ImageRetrieval:
         if self._feature == "resnet50":
             q = get_resnet50(image=query_img)
         else:
-            query_img = cv.resize(query_img, STANDARD_FEATURES_SIZE)
             q = compute_feature(query_img, self._feature)
             q = q.ravel()
 
@@ -152,7 +150,7 @@ class ImageRetrieval:
             indexes = self._dataset.get_test_indexes()
             features = features[indexes]
 
-        NN = NearestNeighbors(metric=similarity).fit(features)
+        NN = NearestNeighbors(metric=similarity, algorithm="ball_tree").fit(features)
 
         subfolder = "evaluation" if self._evaluation else ""
 
@@ -222,13 +220,17 @@ class ImageRetrieval:
 
 
 def retrieve_images(img, feature, similarity="euclidean", n_results=5):
-    ds = Dataset(DATASET_FOLDER, image_size=(224, 224) if feature == "resnet50" else STANDARD_FEATURES_SIZE)
+    image_size = (224, 224) if feature == "resnet50" else STANDARD_FEATURES_SIZE
+
+    ds = Dataset(DATASET_FOLDER, image_size=image_size)
     ir = ImageRetrieval(feature, ds)
+
+    img = cv.resize(img, img_size)
 
     ids, dists, secs = ir.search(img, similarity, n_results)
     print("Search Time with index: ", secs)
 
-    #ids, dists, secs = ir.search_with_classification(img, similarity)
-    #print("Search Time with index: ", secs)
+    # ids, dists, secs = ir.search_with_classification(img, similarity)
+    # print("Search Time with index: ", secs)
 
     return [ds.get_image_filepath(idx) for idx in ids], secs, dists

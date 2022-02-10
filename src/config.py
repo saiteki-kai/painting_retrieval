@@ -21,8 +21,10 @@ LIST_OF_FEATURES_IMPLEMENTED = [
     "hog",
     "dct",
     "resnet50",
+    "edge_hist",
     "ccv",
-    "orb"
+    "orb",
+    "combined"
 ]
 
 SIMILARITY_DISTANCES = [

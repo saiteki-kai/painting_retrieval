@@ -13,10 +13,14 @@ from src.painting.utils import resize_with_max_ratio, load_features
 
 
 def combine_features():
-    rgb_hist = load_features("rgb_hist")
+    # con le feature combinate alcune sono calcolate su 224, 244 altre su 512, 512
+    edge_hist = load_features("edge_hist")
     lbp_gray = load_features("lbp")
+    rgb_hist = load_features("rgb_hist")
+    resnet = load_features("resnet50")
+    resnet = resnet / (np.linalg.norm(resnet, 2, axis=0) + 1e-7)
 
-    combined = np.hstack((rgb_hist, lbp_gray))
+    combined = np.hstack((edge_hist, lbp_gray, rgb_hist, resnet))
     print(combined.shape)
 
     pca = PCA(0.99)

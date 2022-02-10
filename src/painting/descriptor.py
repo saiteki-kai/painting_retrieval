@@ -11,17 +11,19 @@ from src.painting.features_extraction import get_resnet50
 
 
 def compute_feature(img, feature):
-    if feature != "combined" and feature not in LIST_OF_FEATURES_IMPLEMENTED:
+    if feature not in LIST_OF_FEATURES_IMPLEMENTED:
         raise ValueError(f"unrecognized feature: '{feature}'")
 
     if feature == "rgb_hist":
-        return compute_rgb_hist(img, bins=256)
+        return compute_rgb_hist(img, bins=8)
     if feature == "local_rgb_hist":
-        return compute_local_rgb_hist(img, block_size=256, bins=32)
+        return compute_local_rgb_hist(img, block_size=128, bins=8)
     elif feature == "hsv_hist":
         return compute_hsv_hist(img, bins=(16, 4, 4))  # 180 256, 256
     elif feature == "local_hsv_hist":
         return compute_local_hsv_hist(img, block_size=256, bins=8)
+    elif feature == "edge_hist":
+        return local_edge_hist(img)
     elif feature == "lbp":
         return compute_lbp_gray(img)
     elif feature == "hog":
@@ -95,7 +97,7 @@ def compute_hsv_hist(img, bins=(8, 8, 8)):
 
 
 def compute_channel_lbp(img):
-    radius = 1 # 2
+    radius = 1  # 2
     n_points = radius * 8
 
     lbp = local_binary_pattern(img, n_points, radius, "nri_uniform")
@@ -125,7 +127,7 @@ def compute_lbp_rgb(img):
 
 def compute_hog(img):
     img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    H = hog(img, pixels_per_cell=(16, 16), cells_per_block=(2, 2))
+    H = hog(img, pixels_per_cell=(64, 64), cells_per_block=(4, 4))
     return H
 
 
@@ -150,15 +152,60 @@ def compute_ccv(img, n=2, tau=0.01):
     return get_ccv(img, n=n, tau=tau)
 
 
+def edge_hist(img):
+    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    gy = cv.Sobel(img, cv.CV_32F, 1, 0, None)
+    gx = cv.Sobel(img, cv.CV_32F, 0, 1, None)
+
+    gm = cv.magnitude(gx, gy)
+    ga = cv.phase(gx, gy, angleInDegrees=True)
+
+    gm_hist = cv.calcHist([gm], [0], None, [10], [0, 1448])
+    gm_hist = cv.normalize(gm_hist, None, 0, 1, cv.NORM_MINMAX)
+
+    ga_hist = cv.calcHist([ga], [0], None, [8], [0, 360])
+    ga_hist = cv.normalize(ga_hist, None, 0, 1, cv.NORM_MINMAX)
+
+    H = np.vstack((gm_hist, ga_hist))
+
+    return H.ravel()
+
+
+def local_edge_hist(img, block_size=128):
+    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    gy = cv.Sobel(img, cv.CV_32F, 1, 0, None)
+    gx = cv.Sobel(img, cv.CV_32F, 0, 1, None)
+
+    gm = cv.magnitude(gx, gy)
+    ga = cv.phase(gx, gy, angleInDegrees=True)
+
+    b = []
+    for row in np.arange(0, img.shape[0], block_size):
+        for col in np.arange(0, img.shape[1], block_size):
+            block_m = gm[row: row + block_size, col: col + block_size]
+            block_a = ga[row: row + block_size, col: col + block_size]
+
+            gm_hist = cv.calcHist([block_m], [0], None, [10], [0, 1448])
+            gm_hist = cv.normalize(gm_hist, None, 0, 1, cv.NORM_MINMAX)
+
+            ga_hist = cv.calcHist([block_a], [0], None, [8], [0, 360])
+            ga_hist = cv.normalize(ga_hist, None, 0, 1, cv.NORM_MINMAX)
+
+            H = np.vstack((gm_hist, ga_hist))
+            b.append(H)
+
+    return np.array(b).flatten()
+
+
 def compute_combined(img):
     lbp_gray = compute_lbp_gray(img)
-    rgb_hist = compute_rgb_hist(img, bins=256)
-    print(lbp_gray.shape)
-    print(rgb_hist.shape)
+    edge_hist = local_edge_hist(img, block_size=128)
+    rgb_hist = compute_rgb_hist(img, bins=8)
+    resnet = get_resnet50(img)
+    resnet = resnet / (np.linalg.norm(resnet, 2, axis=0) + 1e-7)
 
-    combined = np.hstack((rgb_hist, lbp_gray))
+    combined = np.hstack((edge_hist, lbp_gray, rgb_hist, resnet))
     pca = load(os.path.join(FEATURES_FOLDER, "pca_params"))
 
     combined = pca.transform(combined.reshape(1, -1))
-    print(combined.shape)
     return combined

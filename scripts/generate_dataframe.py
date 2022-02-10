@@ -68,8 +68,8 @@ subsample = False
 print(f"Initial train size: {len(df_train)}")
 print(f"Initial test size: {len(df_test)}")
 
-N_train = 100 # If we want to resize
-N_test = 10 # If we want to resize
+N_train = 110 # If we want to resize
+N_test = 0 # If we want to resize
 
 if N_train < len(df_train):
     df_train = (

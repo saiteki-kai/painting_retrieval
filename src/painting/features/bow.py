@@ -47,7 +47,7 @@ def extractFeatures(kmeans, descriptor_list, image_count, n_clusters, verbose=No
 def normalizeFeatures(scale, features):
     return scale.transform(features)
 
-def trainModelBOW(ds:Dataset, n_clusters, verbose=None):
+def trainModelBOW(ds:Dataset, n_clusters=100, verbose=None):
 
     sift =  cv2.SIFT_create() 
     descriptor_list = []
@@ -105,7 +105,7 @@ def trainModelBOW(ds:Dataset, n_clusters, verbose=None):
 
     return kmeans, scale, im_features
 
-def featuresBOW(img, n_clusters, kmeans=None, scale:StandardScaler=None, verbose=None):
+def featuresBOW(img, n_clusters=100, kmeans=None, scale:StandardScaler=None, verbose=None):
     if verbose is not None:
         print(f"Test image size { img.shape }")
         if img.shape[:2] != TRAIN_SIZE:

@@ -115,17 +115,3 @@ class Dataset:
         if self._test_only:
             return list(self._prev_test_index)
         return self._data.loc[~self._data["in_train"]].index
-
-
-if __name__ == "__main__":
-    from utils import DATASET_FOLDER
-
-    ds = Dataset(DATASET_FOLDER)
-
-    print(ds.length())
-    print(ds.get_image_by_index(0))
-    # print(ds.get_image_by_filename("20.jpg"))
-    print(ds.get_relevant_indexes(3))
-
-    # for (img, idx) in ds.images():
-    #    print(img)

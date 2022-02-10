@@ -1,16 +1,14 @@
 import glob
-import os.path
+import os
 
 import cv2
 import numpy as np
 import pickle
-from joblib import Parallel, delayed, load, dump
 from skimage.measure import ransac
 from skimage.transform import AffineTransform
 
 from src.config import FEATURES_FOLDER
 from src.painting.dataset import Dataset
-from src.painting.utils import resize_with_max_ratio
 
 
 def compute_score(matches, n_inliers):

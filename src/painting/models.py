@@ -22,11 +22,12 @@ segmentation_model = None
 
 def load_classification_model(model_name="resnet_model"):
     base_model = load_model(os.path.join(MODEL_FOLDER, model_name))
-    model = Model(inputs=base_model.input, outputs=base_model.layers[-3].output)  # dense_4
+    model = Model(inputs=base_model.input, outputs=base_model.layers[-3].output)  # dense_4 (layer -3)
     del base_model
 
     global classification_model
     classification_model = model
+
 
 def load_prediction_model(model_name="resnet_model"):
     base_model = load_model(os.path.join(MODEL_FOLDER, model_name))
@@ -53,6 +54,7 @@ def get_classification_model():
     if classification_model is None:
         load_classification_model()
     return classification_model
+
 
 def get_prediction_model():
     if prediction_model is None:

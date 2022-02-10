@@ -59,6 +59,10 @@ def recall_at_k(relevant, retrieved, k=None):
 
     relevant = set(relevant)
     retrieved = set(retrieved[:k])
+
+    if len(relevant) == 0:
+        return 0
+    
     return len(relevant & retrieved) / float(len(relevant))
 
 

@@ -13,7 +13,7 @@ from src.config import LIST_GENRE, LIST_F1_PER_GENRE_ON_TEST
 from src.painting import evalutation_metrics
 from src.painting.dataset import Dataset
 from src.painting.descriptor import compute_feature
-from src.painting.features_extraction import get_resnet50, prediction_resnet50
+from src.painting.features.resnet import get_resnet50, prediction_resnet50
 from src.painting.utils import load_features
 
 
@@ -91,7 +91,7 @@ class ImageRetrieval:
                 distances_genre = []
 
                 for i in range(len(indexes)):
-                    if (indexes[i] in index_genre):
+                    if indexes[i] in index_genre:
                         indexes_genre.append(indexes[i])
                         distances_genre.append(distances[i])
 
@@ -239,7 +239,7 @@ def retrieve_images(img, feature, similarity="euclidean", n_results=5):
     ds = Dataset(DATASET_FOLDER, image_size=image_size)
     ir = ImageRetrieval(feature, ds)
 
-    img = cv.resize(img, img_size)
+    img = cv.resize(img, image_size)
 
     ids, dists, secs = ir.search(img, similarity, n_results)
     print("Search Time with index: ", secs)

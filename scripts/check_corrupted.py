@@ -1,5 +1,3 @@
-import PIL.Image
-import cv2 as cv
 from src.painting.dataset import Dataset
 from src.config import DATASET_FOLDER
 

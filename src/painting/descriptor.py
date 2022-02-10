@@ -18,17 +18,17 @@ def compute_feature(img, feature):
         raise ValueError(f"unrecognized feature: '{feature}'")
 
     if feature == "rgb_hist":
-        return compute_rgb_hist(img, bins=32)
+        return compute_rgb_hist(img, bins=128)
     if feature == "local_rgb_hist":
-        return compute_local_rgb_hist(img, block_size=128, bins=256)
+        return compute_local_rgb_hist(img, block_size=64, bins=(16, 16, 16))
     elif feature == "hsv_hist":
-        return compute_hsv_hist(img, bins=(16, 4, 4))  # 180 256, 256
+        return compute_hsv_hist(img, bins=(16, 16, 16))
     elif feature == "local_hsv_hist":
-        return compute_local_hsv_hist(img, block_size=128, bins=(180, 256, 256))
+        return compute_local_hsv_hist(img, block_size=128, bins=(16, 16, 16))
     elif feature == "edge_hist":
         return local_edge_hist(img)
     elif feature == "lbp":
-        return compute_lbp_rgb(img, radius=3)
+        return compute_lbp_rgb(img, radius=1)
     elif feature == "hog":
         return compute_hog(img)
     elif feature == "resnet50":
@@ -52,7 +52,7 @@ def compute_orb(img, n_features=500):
 
 def compute_hog(img):
     img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    H = hog(img, pixels_per_cell=(64, 64), cells_per_block=(4, 4))
+    H = hog(img, pixels_per_cell=(128, 128), cells_per_block=(2, 2))
     return H
 
 

@@ -12,6 +12,7 @@ from src.painting.features.histogram import compute_rgb_hist, compute_local_rgb_
 from src.painting.features.lbp import compute_lbp_rgb, compute_lbp_gray
 from src.painting.features.resnet import get_resnet50
 from src.painting.features.bow import featuresBOW
+from src.painting.utils import load_scaler
 
 
 def compute_feature(img, feature):
@@ -19,7 +20,7 @@ def compute_feature(img, feature):
         raise ValueError(f"unrecognized feature: '{feature}'")
 
     if feature == "rgb_hist":
-        return compute_rgb_hist(img, bins=128)
+        return compute_rgb_hist(img, bins=(128, 128, 128))
     if feature == "local_rgb_hist":
         return compute_local_rgb_hist(img, block_size=64, bins=(16, 16, 16))
     elif feature == "hsv_hist":
@@ -29,7 +30,7 @@ def compute_feature(img, feature):
     elif feature == "edge_hist":
         return local_edge_hist(img)
     elif feature == "lbp":
-        return compute_lbp_rgb(img, radius=1)
+        return compute_lbp_gray(img, radius=1)
     elif feature == "hog":
         return compute_hog(img)
     elif feature == "resnet50":
@@ -62,18 +63,28 @@ def compute_hog(img):
 def compute_resnet50(dataset):
     return get_resnet50(dataset=dataset)
 
+
 def compute_bow(img):
     return featuresBOW(img)
 
 
 def compute_combined(img):
-    lbp_gray = compute_lbp_gray(img)
-    edge_hist = local_edge_hist(img, block_size=128)
-    rgb_hist = compute_rgb_hist(img, bins=8)
-    resnet = get_resnet50(img)
-    resnet = resnet / (np.linalg.norm(resnet, 2, axis=0) + 1e-7)
+    lbp = compute_feature(img, "lbp")
+    hist = compute_feature(img, "local_rgb_hist")
+    #h = compute_feature(img, "hog")
 
-    combined = np.hstack((edge_hist, lbp_gray, rgb_hist, resnet))
+    lbp_scaler = load_scaler("lbp")
+    hist_scaler = load_scaler("local_rgb_hist")
+    #hog_scaler = load_scaler("hog")
+
+    lbp = lbp_scaler.transform(lbp.reshape(1, -1))
+    hist = hist_scaler.transform(hist.reshape(1, -1))
+    #h = hog_scaler.transform(h.reshape(1, -1))
+
+    # resnet = get_resnet50(img)
+    # resnet = resnet / (np.linalg.norm(resnet, 2, axis=0) + 1e-7)
+
+    combined = np.hstack((lbp, hist))
     pca = load(os.path.join(FEATURES_FOLDER, "pca_params"))
 
     combined = pca.transform(combined.reshape(1, -1))

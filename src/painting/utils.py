@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from src.config import LIST_OF_FEATURES_IMPLEMENTED, FEATURES_FOLDER
 
 
-def load_features(feature):
+def load_features(feature, return_scaler=False):
     if feature != "combined" and feature not in LIST_OF_FEATURES_IMPLEMENTED:
         raise ValueError(f"unrecognized feature: '{feature}'")
 
@@ -16,7 +16,22 @@ def load_features(feature):
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"feature '{feature}' not computed")
 
-    return joblib.load(filepath, mmap_mode="r+")
+    F = joblib.load(filepath, mmap_mode="r+")
+
+    if return_scaler:
+        scaler = load_scaler(feature)
+        return F, scaler
+
+    return F
+
+
+def load_scaler(feature):
+    filepath = os.path.join(FEATURES_FOLDER, f"scaler_{feature}")
+
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"scaler for '{feature}' not computed")
+
+    return joblib.load(filepath)
 
 
 def plot_image(image):

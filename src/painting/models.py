@@ -24,9 +24,10 @@ segmentation_model = None
 kmeans_model = None
 scaler_model = None
 
+
 def load_classification_model(model_name="resnet_model"):
     base_model = load_model(os.path.join(MODEL_FOLDER, model_name))
-    model = Model(inputs=base_model.input, outputs=base_model.layers[-3].output)  # dense_4 (layer -3)
+    model = Model(inputs=base_model.input, outputs=base_model.layers[-4].output)  # dense_4 (layer -3)
     del base_model
 
     global classification_model

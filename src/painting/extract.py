@@ -17,7 +17,7 @@ def compute_descriptor(dataset: Dataset, descriptor_name):
     N = dataset.length()
 
     if descriptor_name == "resnet50":
-        F_length = 1024
+        F_length = 2048
     else:
         # compute the feature on a random image to get the length
         rand_img = dataset.get_image_by_index(0)
@@ -33,7 +33,7 @@ def compute_descriptor(dataset: Dataset, descriptor_name):
     dump(F, descriptor_filepath)
     F = load(descriptor_filepath, mmap_mode="r+")
 
-    N_JOBS = 8
+    N_JOBS = -1
 
     if descriptor_name == "resnet50":
 

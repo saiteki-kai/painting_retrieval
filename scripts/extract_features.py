@@ -15,11 +15,9 @@ from src.painting.utils import resize_with_max_ratio, load_features
 def combine_features():
     lbp, lbp_scaler = load_features("lbp", return_scaler=True)
     hist, hist_scaler = load_features("local_rgb_hist", return_scaler=True)
-    # hog, hog_scaler = load_features("hog", return_scaler=True)
 
     lbp = lbp_scaler.transform(lbp)
     hist = hist_scaler.transform(hist)
-    # hog = hog_scaler.transform(hog)
 
     combined = np.hstack((lbp, hist))
     print(combined.shape)
@@ -30,16 +28,16 @@ def combine_features():
 
     dump(combined, os.path.join(FEATURES_FOLDER, "combined.npy"))
     dump(pca, os.path.join(FEATURES_FOLDER, "pca_params"), compress=True)
-
+    
 
 if __name__ == "__main__":
     ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
 
     # We avoid computing ccv for now (too slow)
-    avoid_list = ['ccv', 'resnet50']
+    avoid_list = ['resnet50']
     list_of_features = [x for x in LIST_OF_FEATURES_IMPLEMENTED if x not in avoid_list]
 
-    list_of_features = ["hog", "local_rgb_hist", "lbp"]
+    list_of_features = ["bow"] # resnet50 (dense4, dropout2 e avgpool), bow
     for feature in list_of_features:
         print("Computing: " + feature)
         compute_descriptor(ds, feature)

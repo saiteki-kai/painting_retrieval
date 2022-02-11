@@ -27,7 +27,11 @@ scaler_model = None
 
 def load_classification_model(model_name="resnet_model"):
     base_model = load_model(os.path.join(MODEL_FOLDER, model_name))
-    model = Model(inputs=base_model.input, outputs=base_model.layers[-4].output)  # dense_4 (layer -3)
+    model = Model(inputs=base_model.input, outputs=base_model.layers[-4].output)
+    # avg_pool (layer -4) # dense_4 (layer -3) # dropout_2 (layer -2)
+    # if changed into avg_pool go to
+    # src/painting/extract.py and change line 20 (about) F_length = 2048
+    #base_model.summary()
     del base_model
 
     global classification_model

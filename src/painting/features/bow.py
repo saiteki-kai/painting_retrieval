@@ -2,7 +2,8 @@ import cv2
 import numpy as np 
 import os
 import time
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans #really slow
+from sklearn.cluster import MiniBatchKMeans
 from sklearn.preprocessing import StandardScaler
 from joblib import dump, load
 from src.painting.dataset import Dataset
@@ -24,7 +25,7 @@ def vstackDescriptors(descriptor_list):
     return descriptors
 
 def clusterDescriptors(descriptors, n_clusters):
-    kmeans = KMeans(n_clusters = n_clusters).fit(descriptors)
+    kmeans = MiniBatchKMeans(n_clusters = n_clusters).fit(descriptors)
     kmean_path = os.path.join(MODEL_FOLDER, 'KMeans_BOW.joblib')
     dump(kmeans, kmean_path) 
     return kmeans
@@ -117,14 +118,10 @@ def featuresBOW(img, n_clusters=100, kmeans=None, scale:StandardScaler=None, ver
     if kmeans is None:
         if verbose is not None:
             print("Getting KMeans model")
-        #kmean_path = os.path.join(MODEL_FOLDER, 'KMeans_BOW.joblib')
-        #kmeans = load(kmean_path) 
         kmeans = get_kmeans_model()
     if scale is None:
         if verbose is not None:
             print("Getting Scaler model")
-        #scaler_path = os.path.join(MODEL_FOLDER, 'Scaler_BOW.joblib')
-        #scale = load(scaler_path)  
         scale = get_scaler_model()
 
     sift = cv2.SIFT_create()

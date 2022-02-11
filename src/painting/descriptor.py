@@ -65,7 +65,7 @@ def compute_resnet50(dataset):
 
 
 def compute_bow(img):
-    return featuresBOW(img)
+    return np.asarray( featuresBOW(img) )
 
 
 def compute_combined(img):

@@ -10,7 +10,7 @@ from src.painting.retrieval import ImageRetrieval
 
 if __name__ == "__main__":
 
-    FEATURE = "resnet50"
+    FEATURE = "bow"
     SIMILARITY = "euclidean"
     RESULTS = 10
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     relevant_ids = [dataset.get_relevant_indexes(query_id) for query_id in query_ids]
 
     relevant_ids = pd.DataFrame({"genre": query_genres, "query_id": query_ids, "docs_ids": relevant_ids})
-    relevant_ids = relevant_ids.groupby("genre").sample(200, random_state=1234)
+    relevant_ids = relevant_ids.groupby("genre").sample(45, random_state=1234)
 
     metrics = ["precision_at_k", "recall_at_k", "average_precision"]
 

@@ -2,12 +2,11 @@ import cv2
 import numpy as np 
 import os
 import time
-from sklearn.cluster import KMeans #really slow
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.preprocessing import StandardScaler
 from joblib import dump, load
 from src.painting.dataset import Dataset
-from src.config import LIST_GENRE, MODEL_FOLDER, DATASET_FOLDER
+from src.config import LIST_GENRE, MODEL_FOLDER
 from src.painting.models import get_kmeans_model, get_scaler_model
 
 TRAIN_SIZE = (128, 128)

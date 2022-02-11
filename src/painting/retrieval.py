@@ -79,11 +79,11 @@ class ImageRetrieval:
             # Select only the indexes of the images of the same genre
             genre_pred = prediction_resnet50(query_img)
             n_genre = numpy.argmax(genre_pred)
-            print("Genre: " + LIST_GENRE[n_genre])
+            #print("Genre: " + LIST_GENRE[n_genre])
 
             if LIST_F1_PER_GENRE_ON_TEST[n_genre] >= confidence:
-                print("---------------WITH CLASSIFICATION---------------")
-                print("----------CONFIDENCE " + str(LIST_F1_PER_GENRE_ON_TEST[n_genre]) + "----------")
+                #print("---------------WITH CLASSIFICATION---------------")
+                #print("----------CONFIDENCE " + str(LIST_F1_PER_GENRE_ON_TEST[n_genre]) + "----------")
 
                 index_genre = self._dataset.get_indexes_from_genre(LIST_GENRE[n_genre])
 
@@ -103,8 +103,8 @@ class ImageRetrieval:
                 elapsed = time.time() - start_time
                 return indexes_genre, distances_genre, elapsed
             else:
-                print("---------------WITHOUT CLASSIFICATION---------------")
-                print("----------CONFIDENCE " + str(LIST_F1_PER_GENRE_ON_TEST[n_genre]) + "----------")
+                #print("---------------WITHOUT CLASSIFICATION---------------")
+                #print("----------CONFIDENCE " + str(LIST_F1_PER_GENRE_ON_TEST[n_genre]) + "----------")
                 elapsed = time.time() - start_time
                 return indexes, distances, elapsed
 

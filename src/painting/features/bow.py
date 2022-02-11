@@ -12,6 +12,7 @@ from src.painting.models import get_kmeans_model, get_scaler_model
 
 TRAIN_SIZE = (128, 128)
 NUM_CLASSES = len(LIST_GENRE)
+N_CLUSTERS_DEFAULT = 200
 
 def getDescriptors(sift, img):
     kp, des = sift.detectAndCompute(img, None)
@@ -48,7 +49,7 @@ def extractFeatures(kmeans, descriptor_list, image_count, n_clusters, verbose=No
 def normalizeFeatures(scale, features):
     return scale.transform(features)
 
-def trainModelBOW(ds:Dataset, n_clusters=100, verbose=None):
+def trainModelBOW(ds:Dataset, n_clusters=N_CLUSTERS_DEFAULT, verbose=None):
 
     sift =  cv2.SIFT_create() 
     descriptor_list = []
@@ -106,7 +107,7 @@ def trainModelBOW(ds:Dataset, n_clusters=100, verbose=None):
 
     return kmeans, scale, im_features
 
-def featuresBOW(img, n_clusters=100, kmeans=None, scale:StandardScaler=None, verbose=None):
+def featuresBOW(img, n_clusters=N_CLUSTERS_DEFAULT, kmeans=None, scale:StandardScaler=None, verbose=None):
     if verbose is not None:
         print(f"Test image size { img.shape }")
         if img.shape[:2] != TRAIN_SIZE:

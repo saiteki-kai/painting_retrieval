@@ -1,5 +1,5 @@
 # Painting retrieval
-
+To run the program just run the `main.py` file
 
 ## data
 This folder contains the data.

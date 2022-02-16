@@ -18,6 +18,8 @@ def compute_descriptor(dataset: Dataset, descriptor_name):
 
     if descriptor_name == "resnet50":
         F_length = 2048
+    elif descriptor_name == "sift":
+        F_length = 100 * 128
     else:
         # compute the feature on a random image to get the length
         rand_img = dataset.get_image_by_index(0)
@@ -47,7 +49,11 @@ def compute_descriptor(dataset: Dataset, descriptor_name):
     else:
 
         def fill_matrix(img, idx, F):
-            F[idx] = compute_feature(img, descriptor_name)
+            f = compute_feature(img, descriptor_name)
+
+            if f.shape[0] != F_length:
+                f = np.pad(f, (0, max(0, min(F_length - f.shape[0], F_length))), 'constant', constant_values=np.nan)
+            F[idx] = f
 
         Parallel(n_jobs=N_JOBS, verbose=1)(
             delayed(fill_matrix)(img, idx, F)

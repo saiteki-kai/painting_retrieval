@@ -1,21 +1,57 @@
-import glob
 import os
-
 import cv2
+import joblib
 import numpy as np
-import pickle
+from matplotlib import pyplot as plt
 from skimage.measure import ransac
 from skimage.transform import AffineTransform
 
-from src.config import FEATURES_FOLDER
+from src.config import FEATURES_FOLDER, DATASET_FOLDER
 from src.painting.dataset import Dataset
 
+# global matcher
+#
+#
+# def get_matcher():
+#     return matcher
+#
+#
+# def init_matcher():
+#     global matcher
+#     FLANN_INDEX_KDTREE = 0
+#
+#     index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+#
+#     search_params = dict(checks=50)
+#     matcher = cv2.FlannBasedMatcher(index_params, search_params)
+#
+#     # sift_descriptors = joblib.load(os.path.join(FEATURES_FOLDER, "sift.npy"), mmap_mode="r+")
+#     # sift_descriptors = list([np.array(desc.reshape(-1, 128)) for desc in sift_descriptors])
+#     #
+#     # matcher.add(sift_descriptors)
+#     # matcher.train()  # not enough space for indexing D:
 
-def compute_score(matches, n_inliers):
-    return n_inliers / len(matches)
+
+def compute_score(real_matches, all_matches):
+    return len(real_matches) / len(all_matches)
 
 
-def matching(kp1, des1, kp2, des2, threshold=0.8):
+def flann_matching(des1, des2, lowe_ratio=0.7):
+    matcher = cv2.BFMatcher(cv2.NORM_L2)
+    knn_matches = matcher.knnMatch(des1, des2, k=2)
+
+    # Filter matches using the Lowe's ratio test
+    ratio_thresh = lowe_ratio
+    good_matches = []
+    for i, values in enumerate(knn_matches):
+        if len(values) == 2:
+            if values[0].distance < ratio_thresh * values[1].distance:
+                good_matches.append(values[0])
+
+    return good_matches, knn_matches
+
+
+def method2(kp1, des1, kp2, des2):
     bf_matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = bf_matcher.match(des1, des2)
     matches = sorted(matches, key=lambda x: x.distance)
@@ -32,66 +68,63 @@ def matching(kp1, des1, kp2, des2, threshold=0.8):
     _, inliers = ransac((src_pts, dst_pts), AffineTransform, min_samples=MIN_SAMPLES,
                         residual_threshold=8, max_trials=100)  # 10000
 
-    if inliers is not None and len(inliers) > 0:
-        n_inliers = np.sum(inliers)
-        score = compute_score(matches, n_inliers)
 
-        if score > threshold:
-            return score
-
-    return None
-
-
-def exact_matching(img):
-    # img = resize_with_max_ratio(img, 512, 512)
+def exact_matching(img, threshold=0.35, lowe_ratio=0.7):
     img = cv2.resize(img, (512, 512))
-    kp1, des1 = compute_orb(img)
+    des1 = compute_sift(img, dense=False)
+    des1 = des1.reshape((-1, 128))
 
-    if len(kp1) == 0:
-        return None
+    # real_matches, all_matches = flann_matching(des1, None)
+    # score = compute_score(real_matches, all_matches)
+    # print(score)
+    #
+    # if score > threshold:
+    #     return score
 
-    orb_files = glob.glob(os.path.join(FEATURES_FOLDER, "orb", "*.pickle"))
+    sift_descriptors = joblib.load(os.path.join(FEATURES_FOLDER, "sift.npy"), mmap_mode="r+")
 
-    for filepath in orb_files:
-        idx = int(os.path.splitext(os.path.split(filepath)[-1])[0])
-        with open(filepath, "rb") as f:
-            orb = pickle.load(f)
+    max_score = (-1, 0)
+    for i, des2 in enumerate(sift_descriptors):
+        if des2 is not None:
+            des2 = des2[~np.isnan(des2)]
+            if des2.shape[0] > 128:
+                des2 = des2.reshape((-1, 128))
+                real_matches, all_matches = flann_matching(des1, des2, lowe_ratio=lowe_ratio)
+                score = compute_score(real_matches, all_matches)
 
-            kps = []
-            des = []
-            for o in orb:
-                kp = cv2.KeyPoint(x=o[0][0], y=o[0][1], size=o[1], angle=o[2], response=o[3], octave=o[4],
-                                  class_id=o[5])
-                kps.append(kp)
-                des.append(o[6])
-            kp2 = np.asarray(kps)
-            des2 = np.asarray(des)
+                if score > max_score[1]:
+                    max_score = (i, score)
 
-            match = matching(kp1, des1, kp2, des2, threshold=0.8)
+    print(max_score)
+    if max_score[1] > threshold:
+        ds = Dataset(DATASET_FOLDER)
+        return max_score[1], ds.get_image_filepath(max_score[0])
 
-            if match is not None:
-                return idx, match
-
-    return None
+    return None, None
 
 
-def compute_orb(img, n_features=500):
+def compute_dense_keypoints(img, stride):
+    """Define a grid of keypoints"""
+    keypoints = [cv2.KeyPoint(x, y, stride)
+                 for y in range(stride, img.shape[0] - stride, stride)
+                 for x in range(stride, img.shape[1] - stride, stride)]
+    return keypoints
+
+
+def compute_sift(img, stride=32, dense=True, return_keypoints=False):
+    sift = cv2.SIFT_create(100)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    orb = cv2.ORB_create(nfeatures=n_features)
-    kp, des = orb.detectAndCompute(gray, None)
+    if dense:
+        kp = compute_dense_keypoints(gray, stride)
+        _, des = sift.compute(img, np.asarray(kp))
+    else:
+        kp, des = sift.detectAndCompute(img, None)
+    des = np.asarray(des).flatten()
 
-    kp = np.asarray(kp)
-    des = np.asarray(des)
+    if len(des) > 100 * 128:
+        des = des[:100 * 128]
 
-    return kp, des
+    if return_keypoints:
+        return des.flatten(), kp
 
-
-def compute_orb_descriptor(dataset: Dataset):
-    for idx, img in enumerate(dataset.images()):
-        kp, desc = compute_orb(img)
-        if len(kp) > 0 and len(desc) > 0:
-            orb = [(p.pt, p.size, p.angle, p.response, p.octave, p.class_id, d) for (p, d) in zip(kp, desc)]
-            with open(os.path.join(FEATURES_FOLDER, "orb", f"{idx}.pickle"), 'wb') as f:
-                pickle.dump(orb, f)
-        else:
-            print(idx)
+    return des.flatten()

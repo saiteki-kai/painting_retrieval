@@ -27,7 +27,7 @@ def get_resnet50(image=None, dataset: Dataset = None):
     image: An image opened with OpenCV2.
         Doesn't matter the size of the image.
     dataset: A Dataset type. Doesn't matter the image_size of dataset.
-        If image not None it won't be readed.
+        If image not None it won't be read.
     
     output: 1024 long features array
     """

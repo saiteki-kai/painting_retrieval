@@ -13,7 +13,7 @@ class Dataset:
             image_size=STANDARD_FEATURES_SIZE,
             custom_read_image=None,
             test_only=False,
-            name_pickle_file = "data_info.pkl",
+            name_pickle_file="data_info.pkl",
     ):
         self._folder = folder
         self._test_only = test_only
@@ -54,7 +54,7 @@ class Dataset:
         filepath = self._get_image_path(self._data["filename"][index])
 
         if self._custom_read_image is not None:
-            self._custom_read_image(filepath)
+            return self._custom_read_image(filepath)
 
         return self._read_image(filepath)
 
@@ -62,7 +62,7 @@ class Dataset:
         filepath = self._get_image_path(filename)
 
         if self._custom_read_image is not None:
-            self._custom_read_image(filepath)
+            return self._custom_read_image(filepath)
 
         return self._read_image(filepath)
 

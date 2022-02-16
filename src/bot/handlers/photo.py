@@ -8,6 +8,8 @@ from telegram.ext import CallbackContext
 
 from src.painting.exact_matching import exact_matching
 from src.painting.retrieval import retrieve_images
+from src.painting.paint_segmentation import paint_segmentation_pipeline
+from src.painting.models import get_segmentation_model
 
 
 def photo_handler(update: Update, ctx: CallbackContext):
@@ -26,15 +28,27 @@ def photo_handler(update: Update, ctx: CallbackContext):
         file.download(tmp.name)
         img = cv.imread(tmp.name)
 
-        update.message.reply_text("Matching...")
+        if ctx.chat_data["settings"]["segmentation"]:
+            update.message.reply_text("Segmentation...")
+            segmented_img, _ = paint_segmentation_pipeline(img, "", model=get_segmentation_model())
 
-        result = exact_matching(img)
+            with tempfile.NamedTemporaryFile(mode="wb", suffix=ext) as tmp_segmented:
+                cv.imwrite(tmp_segmented.name, segmented_img)
+                update.message.reply_photo(open(tmp_segmented.name, "rb"))
+
+            img = segmented_img
+
+        update.message.reply_text("Matching...")
+        start_time = time.time()
+        result, matched_img_fp = exact_matching(img)
+        matching_time = time.time() - start_time
+        update.message.reply_text(f"Matching took {matching_time:.3f}s")
 
         if result is None:
             update.message.reply_text("No matches found")
         else:
-            _, score = result
-            update.message.reply_text(f"Found a match {score}")
+            update.message.reply_photo(open(matched_img_fp, "rb"))
+            update.message.reply_text(f"Found a match, score: {result}")
 
         update.message.reply_text("Searching...")
 
@@ -53,6 +67,7 @@ def photo_handler(update: Update, ctx: CallbackContext):
 
         images = []
         for i, filepath in enumerate(retrieved_img_paths):
+            print(filepath)
             with open(filepath, "rb") as img:
                 images.append(
                     InputMediaPhoto(

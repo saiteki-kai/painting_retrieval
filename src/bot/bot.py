@@ -8,7 +8,7 @@ from telegram.ext import Filters, MessageHandler, Updater, CallbackContext, Comm
 
 from src.bot.handlers.photo import photo_handler
 from src.bot.handlers.settings import set_feature_handler, set_similarity_handler, \
-    set_results_handler, query_handler, get_settings_handler
+    set_results_handler, query_handler, get_settings_handler, toggle_segmentation_handler
 from src.config import DATA_FOLDER
 
 logging.basicConfig(
@@ -19,9 +19,10 @@ logging.basicConfig(
 def start_handler(update: Update, ctx: CallbackContext):
     # initialize chatbot data
     ctx.chat_data["settings"] = {
-        "feature": "rgb_hist",
+        "feature": "resnet50",
         "similarity": "euclidean",
         "results": 5,
+        "segmentation": True
     }
 
     update.message.reply_text("Welcome")
@@ -48,6 +49,7 @@ def start_bot():
     updater.dispatcher.add_handler(CommandHandler("set_results", set_results_handler))
     updater.dispatcher.add_handler(CommandHandler("set_similarity", set_similarity_handler))
     updater.dispatcher.add_handler(CommandHandler("get_settings", get_settings_handler))
+    updater.dispatcher.add_handler(CommandHandler("toggle_segmentation", toggle_segmentation_handler))
     updater.dispatcher.add_handler(CallbackQueryHandler(query_handler))
     updater.dispatcher.add_error_handler(error_callback)
 

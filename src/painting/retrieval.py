@@ -2,6 +2,7 @@ import os
 import pickle
 import time
 
+import joblib
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy
@@ -23,6 +24,8 @@ class ImageRetrieval:
         self._dataset = dataset
         self._evaluation = evaluation
 
+        # TODO: Load index here for better performances
+
     def search(self, query, similarity="euclidean", n_results=5):
         start_time = time.time()
 
@@ -30,7 +33,10 @@ class ImageRetrieval:
         if isinstance(query, int):
             query_img = self._dataset.get_image_by_index(query)
         else:
-            query_img = query
+            if self._feature != "resnet50":
+                query_img = cv.resize(query, STANDARD_FEATURES_SIZE)
+            else:
+                query_img = query
 
         if self._feature == "resnet50":
             q = get_resnet50(image=query_img)
@@ -38,19 +44,22 @@ class ImageRetrieval:
             q = compute_feature(query_img, self._feature)
             q = q.ravel()
 
+        feature_time = time.time() - start_time
+
         subfolder = "evaluation" if self._evaluation else ""
 
         filename = f"{self._feature}-{similarity}.index"
 
         with open(os.path.join(FEATURES_FOLDER, subfolder, filename), "rb") as index:
-            NN = pickle.load(index)
+            start_time = time.time()
+            NN = joblib.load(index)
             distances, indexes = NN.kneighbors([q], n_results)
 
             distances = distances[0]
             indexes = indexes[0]
 
-            elapsed = time.time() - start_time
-            return indexes, distances, elapsed
+            retrieval_time = time.time() - start_time
+            return indexes, distances, retrieval_time, feature_time
 
     def search_with_classification(self, query, similarity="euclidean", n_results=5, confidence=0.4):
         start_time = time.time()
@@ -115,7 +124,10 @@ class ImageRetrieval:
         if isinstance(query, int):
             query_img = self._dataset.get_image_by_index(query)
         else:
-            query_img = query
+            if self._feature != "resnet50":
+                query_img = cv.resize(query, STANDARD_FEATURES_SIZE)
+            else:
+                query_img = query
 
         if self._feature == "resnet50":
             q = get_resnet50(image=query_img)
@@ -123,6 +135,9 @@ class ImageRetrieval:
             q = compute_feature(query_img, self._feature)
             q = q.ravel()
 
+        feature_time = time.time() - start_time
+
+        start_time = time.time()
         # load the raw document representation
         features = load_features(self._feature)
 
@@ -141,8 +156,8 @@ class ImageRetrieval:
         ranked_indexes = ranked_indexes[:n_results]
         distances = distances[ranked_indexes]
 
-        elapsed = time.time() - start_time
-        return ranked_indexes, distances, elapsed
+        retrieval_time = time.time() - start_time
+        return ranked_indexes, distances, retrieval_time, feature_time
 
     def index(self, similarity):
         features = load_features(self._feature)
@@ -182,7 +197,11 @@ class ImageRetrieval:
             ax.set_axis_off()
 
         # query image
-        query_img = self._dataset.get_image_by_index(query_idx)
+        if isinstance(query_idx, int):
+            query_img = self._dataset.get_image_by_index(query_idx)
+        else:
+            query_img = query_idx
+
         query_img = cv.cvtColor(query_img, cv.COLOR_BGR2RGB)
         query_genre = self._dataset.get_image_genre_by_index(query_idx)
         axes[0, 2].imshow(query_img)
@@ -207,7 +226,7 @@ class ImageRetrieval:
     def evaluate_query(
             self, query_id, relevant_ids, metrics, similarity="euclidean", n_results=5
     ):
-        retrieved_ids, _, _ = self.search(query_id, similarity, n_results)
+        retrieved_ids, _, _, _ = self.search(query_id, similarity, n_results)
 
         results = {}
         for m in metrics:
@@ -239,9 +258,7 @@ def retrieve_images(img, feature, similarity="euclidean", n_results=5):
     ds = Dataset(DATASET_FOLDER, image_size=image_size)
     ir = ImageRetrieval(feature, ds)
 
-    img = cv.resize(img, image_size)
-
-    ids, dists, secs = ir.search(img, similarity, n_results)
+    ids, dists, secs, _ = ir.search(img, similarity, n_results)
     print("Search Time with index: ", secs)
 
     # ids, dists, secs = ir.search_with_classification(img, similarity)

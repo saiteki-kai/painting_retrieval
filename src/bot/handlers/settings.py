@@ -7,11 +7,11 @@ def set_feature_handler(update: Update, ctx: CallbackContext):
 
     keyboard = [
         [InlineKeyboardButton("ResNet50", callback_data="resnet50")],
-        [InlineKeyboardButton("Global RGB histogram", callback_data="rgb_hist")],
         [InlineKeyboardButton("Local RGB histogram", callback_data="local_rgb_hist")],
-        [InlineKeyboardButton("Global HSV histogram", callback_data="hsv_hist")],
+        [InlineKeyboardButton("Local HSV histogram", callback_data="local_hsv_hist")],
         [InlineKeyboardButton("HOG", callback_data="hog")],
-        [InlineKeyboardButton("LBP RGB", callback_data="lbp")],
+        [InlineKeyboardButton("LBP", callback_data="lbp")],
+        [InlineKeyboardButton("HOG + LBP + Local RGB histogram", callback_data="combined")],
     ]
 
     update.message.reply_text(
@@ -25,7 +25,6 @@ def set_similarity_handler(update: Update, ctx: CallbackContext):
 
     keyboard = [
         [InlineKeyboardButton("Euclidean", callback_data="euclidean")],
-        [InlineKeyboardButton("Cosine", callback_data="cosine")],
         [InlineKeyboardButton("Manhattan", callback_data="manhattan")],
         [InlineKeyboardButton("Chebyshev", callback_data="chebyshev")],
     ]
@@ -52,6 +51,15 @@ def set_results_handler(update: Update, ctx: CallbackContext):
         "Choice the number of images to retrieve:",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
+
+
+def toggle_segmentation_handler(update: Update, ctx: CallbackContext):
+    enabled = ctx.chat_data["settings"]["segmentation"]
+    message = 'disabled' if enabled else 'enabled'
+
+    ctx.chat_data["settings"]["segmentation"] = not enabled
+
+    update.message.reply_text(f"Segmentation *{message}*", parse_mode=ParseMode.MARKDOWN)
 
 
 def query_handler(update: Update, ctx: CallbackContext):
@@ -85,7 +93,9 @@ def get_settings_handler(update: Update, ctx: CallbackContext):
     n_results = ctx.chat_data["settings"]["results"]
     feature = ctx.chat_data["settings"]["feature"]
     similarity = ctx.chat_data["settings"]["similarity"]
+    segmentation = ctx.chat_data["settings"]["segmentation"]
+    segmentation = 'enabled' if segmentation else 'disabled'
 
     update.message.reply_text(
-        f"feature: *{feature}*\nsimilarity: *{similarity}*\nresults: *{n_results}*",
+        f"feature: *{feature}*\nsimilarity: *{similarity}*\nresults: *{n_results}*\nsegmentation: *{segmentation}*",
         parse_mode=ParseMode.MARKDOWN)

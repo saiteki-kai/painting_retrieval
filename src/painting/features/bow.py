@@ -12,6 +12,7 @@ from src.painting.models import get_kmeans_model, get_scaler_model
 
 TRAIN_SIZE = (128, 128)
 NUM_CLASSES = len(LIST_GENRE)
+N_CLUSTERS_DEFAULT = 100
 
 def getDescriptors(sift, img):
     kp, des = sift.detectAndCompute(img, None)

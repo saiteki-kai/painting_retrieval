@@ -23,20 +23,19 @@ LIST_OF_FEATURES_IMPLEMENTED = [
     "resnet50",
     "edge_hist",
     "ccv",
-    "orb",
+    "sift",
     "bow",
     "combined"
 ]
 
 SIMILARITY_DISTANCES = [
     "euclidean",
-    "cosine",
     "manhattan",
     "chebyshev"
 ]
 
 LIST_GENRE = [
-    'abstract', 
+    'abstract',
     'allegorical painting',
     'animal painting',
     'cityscape',
@@ -59,7 +58,7 @@ LIST_GENRE = [
 ]
 
 LIST_F1_PER_GENRE_ON_TEST = [
-    0.6918767507002801, 
+    0.6918767507002801,
     0.0,
     0.005899705014749263,
     0.4549180327868853,
@@ -80,4 +79,3 @@ LIST_F1_PER_GENRE_ON_TEST = [
     0.23668639053254437,
     0.0
 ]
-

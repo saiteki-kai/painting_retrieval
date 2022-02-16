@@ -10,7 +10,7 @@ from src.painting.retrieval import ImageRetrieval
 
 if __name__ == "__main__":
 
-    FEATURE = "bow"
+    FEATURE = "resnet50"
     SIMILARITY = "euclidean"
     RESULTS = 10
 

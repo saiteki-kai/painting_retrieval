@@ -2,17 +2,16 @@ import cv2
 import numpy as np 
 import os
 import time
-from sklearn.cluster import KMeans #really slow
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.preprocessing import StandardScaler
 from joblib import dump, load
 from src.painting.dataset import Dataset
-from src.config import LIST_GENRE, MODEL_FOLDER, DATASET_FOLDER
+from src.config import LIST_GENRE, MODEL_FOLDER
 from src.painting.models import get_kmeans_model, get_scaler_model
 
 TRAIN_SIZE = (128, 128)
 NUM_CLASSES = len(LIST_GENRE)
-N_CLUSTERS_DEFAULT = 100
+N_CLUSTERS_DEFAULT = 200
 
 def getDescriptors(sift, img):
     kp, des = sift.detectAndCompute(img, None)
@@ -49,7 +48,7 @@ def extractFeatures(kmeans, descriptor_list, image_count, n_clusters, verbose=No
 def normalizeFeatures(scale, features):
     return scale.transform(features)
 
-def trainModelBOW(ds:Dataset, n_clusters=100, verbose=None):
+def trainModelBOW(ds:Dataset, n_clusters=N_CLUSTERS_DEFAULT, verbose=None):
 
     sift =  cv2.SIFT_create() 
     descriptor_list = []
@@ -107,7 +106,7 @@ def trainModelBOW(ds:Dataset, n_clusters=100, verbose=None):
 
     return kmeans, scale, im_features
 
-def featuresBOW(img, n_clusters=100, kmeans=None, scale:StandardScaler=None, verbose=None):
+def featuresBOW(img, n_clusters=N_CLUSTERS_DEFAULT, kmeans=None, scale:StandardScaler=None, verbose=None):
     if verbose is not None:
         print(f"Test image size { img.shape }")
         if img.shape[:2] != TRAIN_SIZE:

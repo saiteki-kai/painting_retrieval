@@ -3,6 +3,11 @@
 The aim of the project is to provide a telegram bot that can recognize a photographed painting and that can recommend
 similar ones.
 
+## Preview
+
+![bot example](./out/bot-preview.png)
+
+
 ## Install
 
 ```

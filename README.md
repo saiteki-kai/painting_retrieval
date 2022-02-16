@@ -35,10 +35,6 @@ python3 scripts/{script-name}.py
 
 ## Folders
 
-### bot
-
-This folder contains the code concerning the telegram bot.
-
 ### data
 
 This folder is intended to contain the [original](https://www.kaggle.com/c/painter-by-numbers/) and processed dataset.
@@ -51,16 +47,16 @@ This folder contains all the trained models.
 - `KMeans_BOW.joblib` : KMeans model, used in BOW features
 - `Scaler_BOW.joblib` : Scaler, used in BOW features
 
-### painting
-
-This folder contains the code concerning the paintings. It ranges from the calculation of the features to the matching.
-
 ### scripts
 
 This folder contains the code that must be executed offline to set up the system before execution.
 
 ### src
 
-- painting This folder contains the code concerning the paintings. It ranges from the calculation of the features to the
-  matching.
-- bot This folder contains the code concerning the telegram bot.
+#### painting
+
+This folder contains the code concerning the paintings. It ranges from the calculation of the features to the matching.
+
+#### bot
+
+This folder contains the code concerning the telegram bot.

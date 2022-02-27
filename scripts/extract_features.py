@@ -34,10 +34,11 @@ def combine_features():
 if __name__ == "__main__":
     ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
 
-    avoid_list = ['resnet50', 'sift']
+    avoid_list = ['resnet50', 'sift', 'bow']
     list_of_features = [x for x in LIST_OF_FEATURES_IMPLEMENTED if x not in avoid_list]
 
     for feature in list_of_features:
+        print("--------------------------------------------------------")
         print("Computing: " + feature)
         compute_descriptor(ds, feature)
 
@@ -48,6 +49,7 @@ if __name__ == "__main__":
     # We want to compute resnet now to observe better the results.
     ds = Dataset(DATASET_FOLDER, (224, 224))
 
+    print("--------------------------------------------------------")
     print("Computing: resnet50")
     compute_descriptor(ds, "resnet50")
 

@@ -4,12 +4,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from collections import Counter
+import os
+from src.config import DATASET_FOLDER
 
 corrupted = ['69008.jpg', '121.jpg', '38324.jpg', '97976.jpg', '84772.jpg', '77094.jpg', '85232.jpg', '80945.jpg',
              '32150.jpg', '1262.jpg', '32577.jpg', '43658.jpg', '65430.jpg', '95897.jpg', '83271.jpg', '84021.jpg',
              '32192.jpg', '50789.jpg', '38922.jpg']
 
-df = pd.read_csv("../data/raw/dataset/all_data_info.csv")
+csv_path = os.path.join(DATASET_FOLDER, "all_data_info.csv")
+df = pd.read_csv(csv_path)
 df.rename(columns={"new_filename": "filename"}, inplace=True)
 df.drop(columns=["pixelsx", "pixelsy", "size_bytes", "artist_group", "source"], inplace=True)
 df.dropna(subset=["genre"], inplace=True)
@@ -67,8 +70,8 @@ subsample = False
 print(f"Initial train size: {len(df_train)}")
 print(f"Initial test size: {len(df_test)}")
 
-N_train = 20000  # If we want to resize
-N_test = 0  # If we want to resize
+#N_train = 20000  # If we want to resize
+#N_test = 0  # If we want to resize
 
 if N_train < len(df_train):
     df_train = (
@@ -98,29 +101,15 @@ df.reset_index(drop=True, inplace=True)
 
 if subsample:
     print("Subsampled.")
-    df.to_pickle("../data/raw/dataset/data_info_subsampled.pkl")
+    df_path = os.path.join(DATASET_FOLDER, "data_info_subsampled.pkl")
+    df.to_pickle(df_path)
+
+    df_path_csv = os.path.join(DATASET_FOLDER, "data_info_subsampled.csv")
+    df.to_csv(df_path_csv) # Sometimes system doesn't allow read pkl
 else:
     print("Original size.")
-    df.to_pickle("../data/raw/dataset/data_info.pkl")
-    # df.to_csv("../data/raw/dataset/data_info.csv") # 'data_info_subsampled.csv'
+    df_path = os.path.join(DATASET_FOLDER, "data_info.pkl")
+    df.to_pickle(df_path)
 
-# from collections import Counter
-
-# c_train = Counter(df_train["genre"])
-# c_test = Counter(df_test["genre"])
-
-# for key, value in c_train.items():
-#     if (value / len(df_train) * 100) >= 1:
-#         print(
-#             f"{key:25s}\t{(value / len(df_train)*100):5.3f}% \t{(c_test[key]/len(df_test)*100):5.3f}% "
-#         )
-
-# s_train = 0
-# s_test = 0
-# for key, value in c_train.items():
-#     if (value / len(df_train) * 100) < 1:
-#         s_train = s_train + value
-#         s_test = s_test + c_test[key]
-
-# print(f"{s_train} {s_train / len(df_train) * 100}")
-# print(f"{s_test} {s_test / len(df_test) * 100}")
+    df_path_csv = os.path.join(DATASET_FOLDER, "data_info.csv")
+    df.to_csv(df_path_csv) # Sometimes system doesn't allow read pkl

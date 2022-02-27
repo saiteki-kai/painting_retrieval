@@ -7,11 +7,10 @@
 import pandas as pd
 import cv2 as cv
 import os
+from src.config import DATASET_FOLDER
 
-base_dir = './data/'
-data_folder = base_dir + 'raw/dataset/'
-train_folder = data_folder + 'train/'
-test_folder = data_folder + 'test/'
+train_folder = os.path.join(DATASET_FOLDER, "train")
+test_folder = os.path.join(DATASET_FOLDER, "test")
 
 
 def clear():
@@ -20,7 +19,8 @@ def clear():
 
 
 def dataframe_generator():
-    df = pd.read_csv(data_folder + "all_data_info.csv")
+    df_path = os.path.join(DATASET_FOLDER, "all_data_info.csv")
+    df = pd.read_csv(df_path)
     df.rename(columns={"new_filename": "filename"}, inplace=True)
     df.drop(columns=["pixelsx", "pixelsy", "size_bytes", "artist_group", "source"], inplace=True)
     df.drop(columns=["artist", "style", "date", "title"], inplace=True)
@@ -31,12 +31,15 @@ def dataframe_generator():
     df["genre"] = df["genre"].astype("category")
 
     df.reset_index(drop=True, inplace=True)
-    df.to_csv(data_folder + "not_all_data_info.csv")
+
+    df_path_saved = os.path.join(DATASET_FOLDER, "not_all_data_info.csv")
+    df.to_csv(df_path_saved)
     return df
 
 
 # df = dataframe_generator() # To generate it
-df = pd.read_csv(data_folder + "not_all_data_info.csv")  # If we have it already
+df_path_saved = os.path.join(DATASET_FOLDER, "not_all_data_info.csv")
+df = pd.read_csv(df_path_saved)  # If we have it already
 
 from collections import Counter
 
@@ -92,8 +95,8 @@ def get_genre_by_filename(filename):
     return df["genre"][index]
 
 
-train_dir = os.path.join(data_folder, "resized_train")
-test_dir = os.path.join(data_folder, "resized_test")
+train_dir = os.path.join(DATASET_FOLDER, "resized_train")
+test_dir = os.path.join(DATASET_FOLDER, "resized_test")
 
 
 def separate_image_in_folders(folder, save_folder_name):

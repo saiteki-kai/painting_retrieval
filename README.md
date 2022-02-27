@@ -24,6 +24,26 @@ Create an .env file in the root folder and insert your bot's token
 TOKEN = 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw
 ```
 
+## Configuration
+
+Download `all_data_info.csv`, `train.zip` and `test.zip` 
+from this [dataset](https://www.kaggle.com/c/painter-by-numbers/)
+and put them into `painting_retrieval/data/raw/dataset/`.
+
+Unzip `model/resnet_model.zip` in the same directory.
+
+Then, from the root, run the following script
+```
+pip install -e "/PATH_TO_PAINTING_RETREIVAL/painting_retrieval"
+```
+Now, from , run
+```
+python3 scripts/generate_dataframe.py
+python3 scripts/extract_features.py 
+python3 scripts/index_features.py
+```
+
+
 ## Execution
 
 Run the bot

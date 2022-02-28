@@ -1,11 +1,9 @@
 import os
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-import skimage.exposure as exposure
 from medpy.filter.smoothing import anisotropic_diffusion
 from skimage.morphology import convex_hull_image
-from utils import resize_with_max_ratio
+from src.painting.utils import resize_with_max_ratio
 
 from src.config import MODEL_FOLDER, OUTPUT_FOLDER
 

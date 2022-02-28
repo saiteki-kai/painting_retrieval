@@ -36,7 +36,7 @@ Then, from the root, run the following script
 ```
 pip install -e "/PATH_TO_PAINTING_RETREIVAL/painting_retrieval"
 ```
-Now, from , run
+Now, from `/PATH_TO_PAINTING_RETREIVAL/painting_retrieval/`, run
 ```
 python3 scripts/generate_dataframe.py
 python3 scripts/extract_features.py 

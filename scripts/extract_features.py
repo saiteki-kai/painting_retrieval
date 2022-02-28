@@ -34,8 +34,14 @@ def combine_features():
 if __name__ == "__main__":
     ds = Dataset(DATASET_FOLDER, image_size=STANDARD_FEATURES_SIZE)
 
-    avoid_list = ['resnet50', 'sift', 'bow']
+    avoid_list = ['resnet50', 'ccv', 'sift', 'bow']
+    #avoid_list = avoid_list + ["rgb_hist", "local_rgb_hist", 
+    #                        "lbp", "resnet50", "sift", "hog"]
+
     list_of_features = [x for x in LIST_OF_FEATURES_IMPLEMENTED if x not in avoid_list]
+    # If you are going fast and want to compute just some features, or also one,  
+    # just edit 'list_of_features' and put the features you want to compute.
+    # e.g. list_of_features = ["rgb_hist", "local_rgb_hist", "lbp"]
 
     for feature in list_of_features:
         print("--------------------------------------------------------")
@@ -43,7 +49,7 @@ if __name__ == "__main__":
         compute_descriptor(ds, feature)
 
     combine_features()
-
+    
     # ------------------------------------------------------------------------------------------------------------------
 
     # We want to compute resnet now to observe better the results.
@@ -60,6 +66,7 @@ if __name__ == "__main__":
         img = resize_with_max_ratio(img, 512, 512)
         return img
 
-
+    print("--------------------------------------------------------")
+    print("Computing: sift")
     ds = Dataset(DATASET_FOLDER, image_size=None, custom_read_image=custom_read)
     compute_descriptor(ds, 'sift')

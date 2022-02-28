@@ -152,7 +152,11 @@ src/painting/test.py
 a.txt
 test.py 
 
+out/**
 out/results/**
+!out/bot-preview.png
+!out/segmentation_pipeline/**
+
 
 data/bot.data
 data/segmentation/

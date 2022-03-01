@@ -30,7 +30,7 @@ def photo_handler(update: Update, ctx: CallbackContext):
 
         if ctx.chat_data["settings"]["segmentation"]:
             update.message.reply_text("Segmentation...")
-            segmented_img, _ = paint_segmentation_pipeline(img, "", model=get_segmentation_model())
+            segmented_img, _ = paint_segmentation_pipeline(img, model=get_segmentation_model(), folder="" )
 
             with tempfile.NamedTemporaryFile(mode="wb", suffix=ext) as tmp_segmented:
                 cv.imwrite(tmp_segmented.name, segmented_img)

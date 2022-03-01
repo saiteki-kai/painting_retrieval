@@ -149,8 +149,9 @@ cython_debug/
 
 #Test files
 src/painting/test.py 
-a.txt
 test.py 
+requirements_g.txt
+requirements_minimal.txt
 
 out/**
 out/results/**

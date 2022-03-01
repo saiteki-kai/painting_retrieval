@@ -15,7 +15,7 @@ virtualenv venv
 source venv/bin/activate
 
 pip install -r requirements.txt
-pip install .
+pip install -e .
 ```
 
 Create an .env file in the root folder and insert your bot's token

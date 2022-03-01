@@ -40,7 +40,7 @@ def photo_handler(update: Update, ctx: CallbackContext):
 
         update.message.reply_text("Matching...")
         start_time = time.time()
-        result, matched_img_fp = exact_matching(img)
+        result, matched_img_fp, match_filename = exact_matching(img)
         matching_time = time.time() - start_time
         update.message.reply_text(f"Matching took {matching_time:.3f}s")
 
@@ -49,6 +49,8 @@ def photo_handler(update: Update, ctx: CallbackContext):
         else:
             update.message.reply_photo(open(matched_img_fp, "rb"))
             update.message.reply_text(f"Found a match, score: {result}")
+            update.message.reply_text(f"Artist: {match_filename[0]}")
+            update.message.reply_text(f"Title: {match_filename[1]}")
 
         update.message.reply_text("Searching...")
 

@@ -3,6 +3,7 @@ import cv2
 import joblib
 import numpy as np
 from matplotlib import pyplot as plt
+from pandas import read_csv as pd_read_csv
 from skimage.measure import ransac
 from skimage.transform import AffineTransform
 
@@ -98,9 +99,19 @@ def exact_matching(img, threshold=0.35, lowe_ratio=0.7):
     print(max_score)
     if max_score[1] > threshold:
         ds = Dataset(DATASET_FOLDER)
-        return max_score[1], ds.get_image_filepath(max_score[0])
 
-    return None, None
+        csv_path = os.path.join(DATASET_FOLDER, "all_data_info.csv")
+        csv = pd_read_csv(csv_path)
+
+        row = csv.loc[csv["new_filename"] == ds.get_image_filename(max_score[0])]
+
+        painting_info = row.to_dict(orient='records')[0]
+        artist = str(painting_info["artist"])
+        title = str(painting_info["title"])
+
+        return max_score[1], ds.get_image_filepath(max_score[0]), [artist, title]
+
+    return None, None, None
 
 
 def compute_dense_keypoints(img, stride):
